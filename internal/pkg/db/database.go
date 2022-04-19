@@ -78,8 +78,7 @@ func SetupTestingDb(host, username, password, port, database string) {
 
 // AutoMigrate project models
 func migration() {
-	DB.AutoMigrate(&models.User{})
-	DB.AutoMigrate(&models.Product{})
+	DB.AutoMigrate(&models.Url{})
 }
 
 func GetDB() *gorm.DB {
