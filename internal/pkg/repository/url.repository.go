@@ -3,6 +3,7 @@ package repository
 import (
 	"strconv"
 
+	"github.com/adiatma85/golang-rest-template-api/internal/pkg/db"
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/models"
 	"github.com/adiatma85/golang-rest-template-api/pkg/helpers"
 )
@@ -105,11 +106,22 @@ func (repo *UrlRepository) Delete(url *models.Url) error {
 }
 
 // Add on to check whether the random generated id is already exist or not
-// func (repo *UrlRepository) IsExist(uniqueId string) (bool, error) {
-// 	isExist, err := repo.GetByShortenUniqueId(uniqueId)
-// 	if err != nil {
-// 		return false, err
-// 	}
+func (repo *UrlRepository) IsExist(uniqueId string) (bool, error) {
+	// Own solution
+	// isExistItem, err := repo.GetByShortenUniqueId(uniqueId)
+	// if err != nil {
+	// 	return false, err
+	// }
 
-// 	if
-// }
+	// return isExistItem != nil, nil
+
+	// Another solution --> https://stackoverflow.com/questions/66392372/select-exists-with-gorm
+	var exists bool
+	database := db.GetDB()
+	err := database.Model(models.Url{}).Where("shorten_url = ?", uniqueId).Find(&exists).Error
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
