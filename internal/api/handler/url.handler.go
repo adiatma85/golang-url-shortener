@@ -13,10 +13,6 @@ import (
 	"github.com/mashingan/smapping"
 )
 
-// Can Create
-// Query Urls
-// Can get from id
-
 // In here we declare url handler
 var urlHandler *UrlHandler
 
@@ -25,9 +21,12 @@ type UrlHandler struct{}
 
 // Interface contract for this instance
 type UrlHandlerInterface interface {
-	UrlCreate(c *gin.Context)
-	QueryUrls(c *gin.Context)
-	UrlLoad(c *gin.Context)
+	Create(c *gin.Context)
+	Query(c *gin.Context)
+	Load(c *gin.Context)
+	// Function that need to be implemented
+	// AuthorizedCreate(c *gin.Context)
+	// AuthorizedDelete(c *gin.Context)
 }
 
 // Func to get instance of url handler
@@ -39,7 +38,7 @@ func GetUrlHandler() UrlHandlerInterface {
 }
 
 // Func to handle the request about new url
-func (handler *UrlHandler) UrlCreate(c *gin.Context) {
+func (handler *UrlHandler) Create(c *gin.Context) {
 	var newUrlRequest validator.CreateUrlRequest
 	err := c.ShouldBind(&newUrlRequest)
 
@@ -75,7 +74,7 @@ func (handler *UrlHandler) UrlCreate(c *gin.Context) {
 }
 
 // Func to handler the request to query urls
-func (handler *UrlHandler) QueryUrls(c *gin.Context) {
+func (handler *UrlHandler) Query(c *gin.Context) {
 	pagination := helpers.Pagination{}
 	urlRepo := repository.GetUrlRepository()
 	queryPageLimit, isPageLimitExist := c.GetQuery("limit")
@@ -102,7 +101,7 @@ func (handler *UrlHandler) QueryUrls(c *gin.Context) {
 }
 
 // Func to return the info of the instance of url with given shorten version of url
-func (handler *UrlHandler) UrlLoad(c *gin.Context) {
+func (handler *UrlHandler) Load(c *gin.Context) {
 	shortToken := c.Param("short_token")
 	// Get Url repo
 	urlRepo := repository.GetUrlRepository()

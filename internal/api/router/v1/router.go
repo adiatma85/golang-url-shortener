@@ -47,9 +47,9 @@ func Setup() *gin.Engine {
 	urlGroup := v1Route.Group("url")
 	urlHandler := handler.GetUrlHandler()
 	{
-		urlGroup.POST("", urlHandler.UrlCreate)
-		urlGroup.GET("query", urlHandler.QueryUrls)
-		urlGroup.GET("load/:short_token", urlHandler.UrlLoad)
+		urlGroup.POST("", urlHandler.Create)
+		urlGroup.GET("query", urlHandler.Query)
+		urlGroup.GET("load/:short_token", urlHandler.Load)
 	}
 
 	return app
