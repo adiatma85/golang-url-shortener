@@ -72,5 +72,8 @@ func (handler *UrlHandler) UrlCreate(c *gin.Context) {
 
 // Func to return the info of the instance of url with given shorten version of url
 func (handler *UrlHandler) UrlLoad(c *gin.Context) {
-
+	data := map[string]interface{}{
+		"param": c.Param("short_token"),
+	}
+	c.JSON(http.StatusOK, data)
 }

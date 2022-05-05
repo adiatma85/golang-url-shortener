@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/adiatma85/golang-rest-template-api/internal/api/handler"
 	"github.com/adiatma85/golang-rest-template-api/internal/api/middleware"
 	"github.com/gin-gonic/gin"
 )
@@ -40,6 +41,14 @@ func Setup() *gin.Engine {
 				"status": "ok",
 			})
 		})
+	}
+
+	// UrlGroup with "url" prefix
+	urlGroup := v1Route.Group("url")
+	urlHandler := handler.GetUrlHandler()
+	{
+		urlGroup.POST("", urlHandler.UrlCreate)
+		urlGroup.GET(":short_token", urlHandler.UrlLoad)
 	}
 
 	return app
