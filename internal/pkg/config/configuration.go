@@ -46,6 +46,7 @@ type DatabaseTestConfiguration struct {
 type ServerConnection struct {
 	Port        string `mapstructure:"SERVER_PORT"`
 	Secret      string `mapstructure:"SERVER_SECRET"`
+	Endpoint    string `mapstructure:"SERVER_ENDPOINT"`
 	Mode        string `mapstructure:"SERVER_MODE"`
 	Name        string `mapstructure:"SERVER_NAME"`
 	ExpiresHour int64  `mapstructure:"SERVER_EXPIRES_HOUR"`
