@@ -117,3 +117,5 @@ func (handler *UrlHandler) Load(c *gin.Context) {
 	response := response.BuildSuccessResponse("success to fetch data", url)
 	c.JSON(http.StatusOK, response)
 }
+
+// Add user entity, repository, and handler
