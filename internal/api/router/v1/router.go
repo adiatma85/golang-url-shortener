@@ -52,5 +52,14 @@ func Setup() *gin.Engine {
 		urlGroup.GET("load/:short_token", urlHandler.Load)
 	}
 
+	// AuthGroup with "auth" prefix
+
+	authGroup := v1Route.Group("auth")
+	authHandler := handler.GetAuthHandler()
+	{
+		authGroup.POST("login", authHandler.Login)
+		authGroup.POST("register", authHandler.Register)
+	}
+
 	return app
 }
