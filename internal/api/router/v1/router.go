@@ -50,6 +50,14 @@ func Setup() *gin.Engine {
 		urlGroup.POST("", urlHandler.Create)
 		urlGroup.GET("query", urlHandler.Query)
 		urlGroup.GET("load/:short_token", urlHandler.Load)
+
+		// Authorized Url Group with "url/authorized" prefix
+		authorizedUrlGroup := urlGroup.Group("authorized")
+		{
+			authorizedUrlGroup.POST("", middleware.AuthJWT(), urlHandler.AuthorizedCreate)
+			authorizedUrlGroup.PUT(":id", middleware.AuthJWT(), urlHandler.AuthorizedUpdate)
+			authorizedUrlGroup.DELETE(":id", middleware.AuthJWT(), urlHandler.AuthorizedDelete)
+		}
 	}
 
 	// AuthGroup with "auth" prefix

@@ -25,8 +25,9 @@ type UrlHandlerInterface interface {
 	Query(c *gin.Context)
 	Load(c *gin.Context)
 	// Function that need to be implemented
-	// AuthorizedCreate(c *gin.Context)
-	// AuthorizedDelete(c *gin.Context)
+	AuthorizedCreate(c *gin.Context)
+	AuthorizedUpdate(c *gin.Context)
+	AuthorizedDelete(c *gin.Context)
 }
 
 // Func to get instance of url handler
@@ -118,4 +119,17 @@ func (handler *UrlHandler) Load(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// Add user entity, repository, and handler
+// Func to authorized New Url when user can customize it
+func (handler *UrlHandler) AuthorizedCreate(c *gin.Context) {
+
+}
+
+// Func to Update existed URL (and it's own of their respective user)
+func (handler *UrlHandler) AuthorizedUpdate(c *gin.Context) {
+
+}
+
+// Func to authorized Delete existed URL (and it's own of their respective user)
+func (handler *UrlHandler) AuthorizedDelete(c *gin.Context) {
+
+}
