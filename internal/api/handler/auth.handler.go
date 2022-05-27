@@ -13,8 +13,6 @@ import (
 	"github.com/mashingan/smapping"
 )
 
-// This will be Auth Handler
-
 // Local Variable
 var authHandler *AuthHandler
 
