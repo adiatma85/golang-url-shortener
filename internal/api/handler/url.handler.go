@@ -158,10 +158,47 @@ func (handler *UrlHandler) AuthorizedCreate(c *gin.Context) {
 
 // Func to Update existed URL (and it's own of their respective user)
 func (handler *UrlHandler) AuthorizedUpdate(c *gin.Context) {
+	var updateRequest validator.AuthorizedUpdateRequest
+	err := c.ShouldBind(&updateRequest)
 
+	// Bad request error
+	if err != nil {
+		response := response.BuildFailedResponse("failed to add new shortener", err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	updateModel := &models.Url{}
+
+	// smapping the update request to models
+	updateModel.ID, _ = strconv.ParseUint(c.Param("urlId"), 10, 64)
+	smapping.FillStruct(updateModel, smapping.MapFields(&updateRequest))
+
+	urlRepo := handler.UrlRepo
+	err = urlRepo.Update(updateModel)
+
+	if err != nil {
+		response := response.BuildFailedResponse("failed to update a url", err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // Func to authorized Delete existed URL (and it's own of their respective user)
 func (handler *UrlHandler) AuthorizedDelete(c *gin.Context) {
+	deleteModel := &models.Url{}
+	deleteModel.ID, _ = strconv.ParseUint(c.Param("urlId"), 10, 64)
 
+	urlRepo := handler.UrlRepo
+
+	err := urlRepo.Delete(deleteModel)
+	if err != nil {
+		response := response.BuildFailedResponse("failed to delete a url item", err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
