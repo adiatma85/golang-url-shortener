@@ -13,7 +13,8 @@ var jwtHelper *jwtCryptoHelper
 // Contract fot JWT Crypto Helper
 type JWTCryptoHelper interface {
 	GenerateToken(UserId string) (string, error)
-	ValidateToken(tokenString string) (bool, error)
+	ValidateToken(tokenString string) (*jwt.Token, bool, error)
+	ExtractClaim(token *jwt.Token) (jwtCustomClaim, bool)
 }
 
 // Struct for jwt custom claim
@@ -54,7 +55,7 @@ func (helper *jwtCryptoHelper) GenerateToken(UserID string) (string, error) {
 }
 
 // Func to validate token
-func (helper *jwtCryptoHelper) ValidateToken(tokenString string) (bool, error) {
+func (helper *jwtCryptoHelper) ValidateToken(tokenString string) (*jwt.Token, bool, error) {
 	serverConfiguration := config.GetConfig().Server
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -63,7 +64,15 @@ func (helper *jwtCryptoHelper) ValidateToken(tokenString string) (bool, error) {
 		return []byte(serverConfiguration.Secret), nil
 	})
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
-	return token.Valid, nil
+	return token, token.Valid, nil
+}
+
+// Func to extract claim
+func (helper *jwtCryptoHelper) ExtractClaim(token *jwt.Token) (jwtCustomClaim, bool) {
+	if claims, ok := token.Claims.(jwtCustomClaim); ok {
+		return claims, ok
+	}
+	return jwtCustomClaim{}, false
 }

@@ -36,8 +36,8 @@ func Setup() *gin.Engine {
 
 	// Home to return what status it is
 	{
-		v1Route.GET("/", func(ctx *gin.Context) {
-			ctx.JSON(http.StatusOK, gin.H{
+		v1Route.GET("/", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
 				"status": "ok",
 			})
 		})
@@ -68,5 +68,10 @@ func Setup() *gin.Engine {
 		}
 	}
 
+	// Testing Auth Group
+	testingAuthGroup := v1Route.Group("testing")
+	{
+		testingAuthGroup.GET("", middleware.AuthJWT(), middleware.IsAdminMiddleware)
+	}
 	return app
 }
