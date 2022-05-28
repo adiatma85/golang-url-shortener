@@ -43,6 +43,14 @@ func Setup() *gin.Engine {
 		})
 	}
 
+	// AuthGroup with "auth" prefix
+	authGroup := v1Route.Group("auth")
+	authHandler := handler.GetAuthHandler()
+	{
+		authGroup.POST("login", authHandler.Login)
+		authGroup.POST("register", authHandler.Register)
+	}
+
 	// UrlGroup with "url" prefix
 	urlGroup := v1Route.Group("url")
 	urlHandler := handler.GetUrlHandler()
@@ -58,15 +66,6 @@ func Setup() *gin.Engine {
 			authorizedUrlGroup.PUT(":id", middleware.AuthJWT(), urlHandler.AuthorizedUpdate)
 			authorizedUrlGroup.DELETE(":id", middleware.AuthJWT(), urlHandler.AuthorizedDelete)
 		}
-	}
-
-	// AuthGroup with "auth" prefix
-
-	authGroup := v1Route.Group("auth")
-	authHandler := handler.GetAuthHandler()
-	{
-		authGroup.POST("login", authHandler.Login)
-		authGroup.POST("register", authHandler.Register)
 	}
 
 	return app

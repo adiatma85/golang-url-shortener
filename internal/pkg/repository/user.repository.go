@@ -50,21 +50,21 @@ func (repo *UserRepository) Create(user models.User) (models.User, error) {
 // Func to get All User without Pagination
 func (repo *UserRepository) GetAll() (*[]models.User, error) {
 	var users []models.User
-	err := Find(&models.User{}, &users, []string{"Product"}, "id asc")
+	err := Find(&models.User{}, &users, []string{}, "id asc")
 	return &users, err
 }
 
 // Func to get Query of WHERE with pagination but
 func (repo *UserRepository) Query(pagination helpers.Pagination) (*helpers.Pagination, error) {
 	var users []models.User
-	outputPagination, _ := Query(&models.User{}, &users, pagination, []string{"Product"})
+	outputPagination, _ := Query(&models.User{}, &users, pagination, []string{})
 	return outputPagination, nil
 }
 
 // Query with existed body from client
 func (repo *UserRepository) QueryWithCondition(q *models.User, pagination helpers.Pagination) (*helpers.Pagination, error) {
 	var users []models.User
-	outputPagination, _ := Query(q, &users, pagination, []string{"Product"})
+	outputPagination, _ := Query(q, &users, pagination, []string{})
 	return outputPagination, nil
 }
 
@@ -73,7 +73,7 @@ func (repo *UserRepository) GetByEmail(email string) (*models.User, error) {
 	var user models.User
 	where := models.User{}
 	where.Email = email
-	_, err := First(&where, &user, []string{"Product"})
+	_, err := First(&where, &user, []string{})
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (repo *UserRepository) GetById(userId string) (*models.User, error) {
 	var user models.User
 	where := models.User{}
 	where.ID, _ = strconv.ParseUint(userId, 10, 64)
-	_, err := First(&where, &user, []string{"Product"})
+	_, err := First(&where, &user, []string{})
 	if err != nil {
 		return nil, err
 	}

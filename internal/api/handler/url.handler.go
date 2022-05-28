@@ -121,7 +121,35 @@ func (handler *UrlHandler) Load(c *gin.Context) {
 
 // Func to authorized New Url when user can customize it
 func (handler *UrlHandler) AuthorizedCreate(c *gin.Context) {
+	var newUrlRequest validator.AuthorizedCreateUrlRequest
+	err := c.ShouldBind(&newUrlRequest)
 
+	// Bad request error
+	if err != nil {
+		response := response.BuildFailedResponse("failed to add new shortener", err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get Url Repo
+	urlRepo := repository.GetUrlRepository()
+	// Generate new randomized token
+	urlModel := &models.Url{}
+	smapping.FillStruct(urlModel, smapping.MapFields(&newUrlRequest))
+
+	if newUrl, err := urlRepo.Create(*urlModel); err != nil {
+		response := response.BuildFailedResponse("failed to add new shortener", err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	} else {
+		data := map[string]interface{}{
+			"original_url": newUrlRequest.OriginalUrl,
+			"short_url":    newUrl.ShortenUrl,
+		}
+		response := response.BuildSuccessResponse("success to add new shortener url", data)
+		c.JSON(http.StatusOK, response)
+		return
+	}
 }
 
 // Func to Update existed URL (and it's own of their respective user)

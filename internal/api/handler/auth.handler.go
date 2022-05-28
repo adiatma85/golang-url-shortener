@@ -48,14 +48,14 @@ func (handler *AuthHandler) Login(c *gin.Context) {
 	userRepo := repository.GetUserRepository()
 	// If user doesn't exist
 	if user, err := userRepo.GetByEmail(loginRequest.Email); err != nil {
-		response := response.BuildFailedResponse("failed to login", err.Error())
+		response := response.BuildFailedResponse("wrong credential", "username or password is not match with our database")
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	} else {
 		// Wrong password
 		passwordHelper := crypto.GetPasswordCryptoHelper()
 		if !passwordHelper.ComparePassword(user.Password, []byte(loginRequest.Password)) {
-			response := response.BuildFailedResponse("wrong credential", err.Error())
+			response := response.BuildFailedResponse("wrong credential", "username or password is not match with our database")
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
