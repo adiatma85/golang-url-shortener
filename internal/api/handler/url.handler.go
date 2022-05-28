@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/adiatma85/golang-rest-template-api/internal/pkg/config"
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/models"
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/repository"
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/validator"
@@ -18,7 +19,8 @@ var urlHandler *UrlHandler
 
 // Struct that need to be implemented according to UrlHandlerInterface
 type UrlHandler struct {
-	UrlRepo repository.UrlRepositoryInterface
+	UrlCharacterLong int
+	UrlRepo          repository.UrlRepositoryInterface
 }
 
 // Interface contract for this instance
@@ -36,7 +38,8 @@ type UrlHandlerInterface interface {
 func GetUrlHandler() UrlHandlerInterface {
 	if urlHandler == nil {
 		urlHandler = &UrlHandler{
-			UrlRepo: repository.GetUrlRepository(),
+			UrlCharacterLong: config.GetConfig().Server.UrlCharacterLong,
+			UrlRepo:          repository.GetUrlRepository(),
 		}
 	}
 	return urlHandler
@@ -61,7 +64,7 @@ func (handler *UrlHandler) Create(c *gin.Context) {
 	smapping.FillStruct(urlModel, smapping.MapFields(&newUrlRequest))
 
 	// For now it's some kind of hard-coded
-	urlModel.ShortenUrl = helpers.RandStringBytesMaskImprSrcSB(6)
+	urlModel.ShortenUrl = helpers.RandStringBytesMaskImprSrcSB(handler.UrlCharacterLong)
 
 	if newUrl, err := urlRepo.Create(*urlModel); err != nil {
 		response := response.BuildFailedResponse("failed to add new shortener", err.Error())

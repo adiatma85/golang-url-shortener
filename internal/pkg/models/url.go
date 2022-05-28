@@ -12,6 +12,13 @@ type Url struct {
 	ShortenUrl  string `gorm:"type:varchar(255)" json:"shorten_url"`
 }
 
+// Hook Aftercreate to return formatted url in shorten url
+func (u *Url) AfterCreate(tx *gorm.DB) (err error) {
+	urlEndpoint := "/api/v1/url/load"
+	u.ShortenUrl = config.GetConfig().Server.Endpoint + urlEndpoint + "/" + u.ShortenUrl
+	return
+}
+
 // Hook Afterfind to return formatted url in shorten url
 func (u *Url) AfterFind(tx *gorm.DB) (err error) {
 	urlEndpoint := "/api/v1/url/load"

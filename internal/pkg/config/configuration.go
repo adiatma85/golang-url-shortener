@@ -11,9 +11,20 @@ var Config *Configuration
 // Struct of Configuration instance.
 // It include Database and Server configuration
 type Configuration struct {
+	Server        ServerConnection
 	Database      DatabaseConfiguration
 	Database_Test DatabaseTestConfiguration
-	Server        ServerConnection
+}
+
+// Struct of Server Configuration instance.
+type ServerConnection struct {
+	Port             string `mapstructure:"SERVER_PORT"`
+	Secret           string `mapstructure:"SERVER_SECRET"`
+	Endpoint         string `mapstructure:"SERVER_ENDPOINT"`
+	Mode             string `mapstructure:"SERVER_MODE"`
+	Name             string `mapstructure:"SERVER_NAME"`
+	ExpiresHour      int    `mapstructure:"SERVER_EXPIRES_HOUR"`
+	UrlCharacterLong int    `mapstructure:"URL_SHORTENER_CHARACTER_LONG"`
 }
 
 // Struct of Database Configuration instance.
@@ -42,22 +53,12 @@ type DatabaseTestConfiguration struct {
 	MaxIdleConns int    `mapstructure:"DATABASE_TEST_MAX_IDLE_CONNS"`
 }
 
-// Struct of Server Configuration instance.
-type ServerConnection struct {
-	Port        string `mapstructure:"SERVER_PORT"`
-	Secret      string `mapstructure:"SERVER_SECRET"`
-	Endpoint    string `mapstructure:"SERVER_ENDPOINT"`
-	Mode        string `mapstructure:"SERVER_MODE"`
-	Name        string `mapstructure:"SERVER_NAME"`
-	ExpiresHour int64  `mapstructure:"SERVER_EXPIRES_HOUR"`
-}
-
 // Setup the configuration
 func Setup(configPath string) {
 	var (
+		serverConfiguration       ServerConnection
 		databaseConfiguration     DatabaseConfiguration
 		databaseTestConfiguration DatabaseTestConfiguration
-		serverConfiguration       ServerConnection
 	)
 
 	viper.SetConfigFile(configPath)
