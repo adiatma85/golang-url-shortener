@@ -17,7 +17,9 @@ import (
 var authHandler *AuthHandler
 
 // Struct to implement contract of AuthInterface
-type AuthHandler struct{}
+type AuthHandler struct {
+	UserRepository repository.UserRepositoryInterface
+}
 
 // Contract of Auth Interface
 type AuthHandlerInterface interface {
@@ -28,7 +30,9 @@ type AuthHandlerInterface interface {
 // Func to return Auth Handler instance
 func GetAuthHandler() AuthHandlerInterface {
 	if authHandler == nil {
-		authHandler = &AuthHandler{}
+		authHandler = &AuthHandler{
+			UserRepository: repository.GetUserRepository(),
+		}
 	}
 	return authHandler
 }
@@ -45,7 +49,7 @@ func (handler *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	userRepo := repository.GetUserRepository()
+	userRepo := handler.UserRepository
 	// If user doesn't exist
 	if user, err := userRepo.GetByEmail(loginRequest.Email); err != nil {
 		response := response.BuildFailedResponse("wrong credential", "username or password is not match with our database")
@@ -89,7 +93,7 @@ func (handler *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	userRepo := repository.GetUserRepository()
+	userRepo := handler.UserRepository
 	passwordHelper := crypto.GetPasswordCryptoHelper()
 	userModel := &models.User{}
 

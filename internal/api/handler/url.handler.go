@@ -17,7 +17,9 @@ import (
 var urlHandler *UrlHandler
 
 // Struct that need to be implemented according to UrlHandlerInterface
-type UrlHandler struct{}
+type UrlHandler struct {
+	UrlRepo repository.UrlRepositoryInterface
+}
 
 // Interface contract for this instance
 type UrlHandlerInterface interface {
@@ -33,7 +35,9 @@ type UrlHandlerInterface interface {
 // Func to get instance of url handler
 func GetUrlHandler() UrlHandlerInterface {
 	if urlHandler == nil {
-		urlHandler = &UrlHandler{}
+		urlHandler = &UrlHandler{
+			UrlRepo: repository.GetUrlRepository(),
+		}
 	}
 	return urlHandler
 }
@@ -51,7 +55,7 @@ func (handler *UrlHandler) Create(c *gin.Context) {
 	}
 
 	// Get Url repo
-	urlRepo := repository.GetUrlRepository()
+	urlRepo := handler.UrlRepo
 	// Generate new randomized token
 	urlModel := &models.Url{}
 	smapping.FillStruct(urlModel, smapping.MapFields(&newUrlRequest))
@@ -77,7 +81,7 @@ func (handler *UrlHandler) Create(c *gin.Context) {
 // Func to handler the request to query urls
 func (handler *UrlHandler) Query(c *gin.Context) {
 	pagination := helpers.Pagination{}
-	urlRepo := repository.GetUrlRepository()
+	urlRepo := handler.UrlRepo
 	queryPageLimit, isPageLimitExist := c.GetQuery("limit")
 	queryPage, isPageQueryExist := c.GetQuery("page")
 
@@ -105,7 +109,7 @@ func (handler *UrlHandler) Query(c *gin.Context) {
 func (handler *UrlHandler) Load(c *gin.Context) {
 	shortToken := c.Param("short_token")
 	// Get Url repo
-	urlRepo := repository.GetUrlRepository()
+	urlRepo := handler.UrlRepo
 
 	url, err := urlRepo.GetByShortenUniqueId(shortToken)
 
@@ -132,7 +136,7 @@ func (handler *UrlHandler) AuthorizedCreate(c *gin.Context) {
 	}
 
 	// Get Url Repo
-	urlRepo := repository.GetUrlRepository()
+	urlRepo := handler.UrlRepo
 	// Generate new randomized token
 	urlModel := &models.Url{}
 	smapping.FillStruct(urlModel, smapping.MapFields(&newUrlRequest))
