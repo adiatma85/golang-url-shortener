@@ -14,12 +14,12 @@ var jwtHelper *jwtCryptoHelper
 type JWTCryptoHelper interface {
 	GenerateToken(UserId string) (string, error)
 	ValidateToken(tokenString string) (*jwt.Token, bool, error)
-	ExtractClaim(token *jwt.Token) (jwtCustomClaim, bool)
+	ExtractClaim(token *jwt.Token) (jwt.MapClaims, bool)
 }
 
 // Struct for jwt custom claim
-type jwtCustomClaim struct {
-	UserID string `json:"user_id"`
+type JwtCustomClaim struct {
+	UserID string `json:"user_id" mapstructure:"user_id"`
 	jwt.StandardClaims
 }
 
@@ -38,7 +38,7 @@ func GetJWTCrypto() JWTCryptoHelper {
 // Func to Generate Token with User ID as main issuer
 func (helper *jwtCryptoHelper) GenerateToken(UserID string) (string, error) {
 	serverConfiguration := config.GetConfig().Server
-	claims := &jwtCustomClaim{
+	claims := &JwtCustomClaim{
 		UserID,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(serverConfiguration.ExpiresHour)).Unix(),
@@ -70,9 +70,9 @@ func (helper *jwtCryptoHelper) ValidateToken(tokenString string) (*jwt.Token, bo
 }
 
 // Func to extract claim
-func (helper *jwtCryptoHelper) ExtractClaim(token *jwt.Token) (jwtCustomClaim, bool) {
-	if claims, ok := token.Claims.(jwtCustomClaim); ok {
+func (helper *jwtCryptoHelper) ExtractClaim(token *jwt.Token) (jwt.MapClaims, bool) {
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		return claims, ok
 	}
-	return jwtCustomClaim{}, false
+	return nil, false
 }
