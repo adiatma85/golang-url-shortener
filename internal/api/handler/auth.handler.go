@@ -11,6 +11,7 @@ import (
 	"github.com/adiatma85/golang-rest-template-api/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/mashingan/smapping"
+	"github.com/mitchellh/mapstructure"
 )
 
 // Local Variable
@@ -25,6 +26,8 @@ type AuthHandler struct {
 type AuthHandlerInterface interface {
 	Login(c *gin.Context)
 	Register(c *gin.Context)
+	UpdateProfile(c *gin.Context)
+	DeleteProfile(c *gin.Context)
 }
 
 // Func to return Auth Handler instance
@@ -119,4 +122,54 @@ func (handler *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusOK, response)
 		return
 	}
+}
+
+// UpdateProfile Func
+func (handler *AuthHandler) UpdateProfile(c *gin.Context) {
+	var updateProfileRequest validator.UpdateProfileRequest
+	err := c.ShouldBind(&updateProfileRequest)
+
+	// Error when binding in validator
+	if err != nil {
+		response := response.BuildFailedResponse("failed to register", err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	userRepo := handler.UserRepository
+
+	// Existing user from middleware
+	existedUser := c.MustGet("user")
+	var mappedUser models.User
+	mapstructure.Decode(existedUser, &mappedUser)
+
+	smapping.FillStruct(&mappedUser, smapping.MapFields(&updateProfileRequest))
+
+	err = userRepo.Update(&mappedUser)
+
+	if err != nil {
+		response := response.BuildFailedResponse("failed to update profile", err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// Delete Profile Func
+func (handler *AuthHandler) DeleteProfile(c *gin.Context) {
+	userRepo := handler.UserRepository
+	// Existing user from middleware
+	existedUser := c.MustGet("user")
+	var mappedUser models.User
+	mapstructure.Decode(existedUser, &mappedUser)
+
+	err := userRepo.Delete(&mappedUser)
+
+	if err != nil {
+		response := response.BuildFailedResponse("failed to delete profile", err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
 }
