@@ -35,9 +35,15 @@ func AuthJWT() gin.HandlerFunc {
 
 		// Get User Repository and set it to gin context
 		userRepo := repository.GetUserRepository()
-		user, _ := userRepo.GetById(smapClaim.UserID)
-		c.Set("user", user)
+		user, err := userRepo.GetById(smapClaim.UserID)
 
+		// If there is error when query-ing to users table
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, "user does not valid")
+			return
+		}
+
+		c.Set("user", user)
 		c.Next()
 	}
 }

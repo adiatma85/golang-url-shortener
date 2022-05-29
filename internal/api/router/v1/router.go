@@ -52,9 +52,9 @@ func Setup() *gin.Engine {
 		profileAuthGroup := authGroup.Group("profile")
 		profileAuthGroup.Use(middleware.AuthJWT(), middleware.IsAdminOrUserMiddleware())
 		{
-			// profileAuthGroup.GET("profile")
-			profileAuthGroup.PUT("profile", authHandler.UpdateProfile)
-			profileAuthGroup.DELETE("profile", authHandler.DeleteProfile)
+			profileAuthGroup.GET("", authHandler.GetProfile)
+			profileAuthGroup.PUT("", authHandler.UpdateProfile)
+			profileAuthGroup.DELETE("", authHandler.DeleteProfile)
 		}
 	}
 

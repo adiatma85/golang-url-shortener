@@ -8,6 +8,7 @@ import (
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/repository"
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/validator"
 	"github.com/adiatma85/golang-rest-template-api/pkg/crypto"
+	"github.com/adiatma85/golang-rest-template-api/pkg/helpers"
 	"github.com/adiatma85/golang-rest-template-api/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/mashingan/smapping"
@@ -26,6 +27,7 @@ type AuthHandler struct {
 type AuthHandlerInterface interface {
 	Login(c *gin.Context)
 	Register(c *gin.Context)
+	GetProfile(c *gin.Context)
 	UpdateProfile(c *gin.Context)
 	DeleteProfile(c *gin.Context)
 }
@@ -122,6 +124,12 @@ func (handler *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusOK, response)
 		return
 	}
+}
+
+// Func to Get each User Profile
+func (handler *AuthHandler) GetProfile(c *gin.Context) {
+	user := helpers.ExtractUserFromClaim(c)
+	c.JSON(http.StatusOK, user)
 }
 
 // UpdateProfile Func
