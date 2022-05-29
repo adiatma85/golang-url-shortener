@@ -15,7 +15,7 @@ type RegisterRequest struct {
 
 // Struct that define the valudatir/binding of UpdateProfile Request
 type UpdateProfileRequest struct {
-	Name     string `json:"name" form:"name" binding:"min=1"`
-	Email    string `json:"email" form:"email" binding:"email"`
-	Password string `json:"password" form:"password" binding:"min=6"`
+	Name     string `json:"name" form:"name"`
+	Email    string `json:"email" form:"email"`
+	Password string `json:"password" form:"password"`
 }

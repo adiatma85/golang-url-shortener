@@ -174,7 +174,7 @@ func (handler *UrlHandler) AuthorizedUpdate(c *gin.Context) {
 	updateModel := &models.Url{}
 
 	// smapping the update request to models
-	updateModel.ID, _ = strconv.ParseUint(c.Param("urlId"), 10, 64)
+	updateModel.ID, _ = strconv.ParseUint(c.Param("id"), 10, 64)
 	smapping.FillStruct(updateModel, smapping.MapFields(&updateRequest))
 
 	urlRepo := handler.UrlRepo
@@ -192,7 +192,7 @@ func (handler *UrlHandler) AuthorizedUpdate(c *gin.Context) {
 // Func to authorized Delete existed URL (and it's own of their respective user)
 func (handler *UrlHandler) AuthorizedDelete(c *gin.Context) {
 	deleteModel := &models.Url{}
-	deleteModel.ID, _ = strconv.ParseUint(c.Param("urlId"), 10, 64)
+	deleteModel.ID, _ = strconv.ParseUint(c.Param("id"), 10, 64)
 
 	urlRepo := handler.UrlRepo
 

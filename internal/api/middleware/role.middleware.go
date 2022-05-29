@@ -5,8 +5,6 @@ import (
 
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/constant"
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/models"
-	"github.com/adiatma85/golang-rest-template-api/internal/pkg/repository"
-	"github.com/adiatma85/golang-rest-template-api/pkg/crypto"
 	"github.com/adiatma85/golang-rest-template-api/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
@@ -20,7 +18,6 @@ func IsAdminMiddleware() gin.HandlerFunc {
 			response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		}
-		c.Set("user", user)
 		c.Next()
 	}
 }
@@ -33,18 +30,14 @@ func IsUserMiddleware() gin.HandlerFunc {
 			response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		}
-		c.Set("user", user)
 		c.Next()
 	}
 }
 
 // Helper function to extract user
 func extractUserFromClaim(c *gin.Context) *models.User {
-	userClaim := c.MustGet("user_claim")
-	var smapClaim crypto.JwtCustomClaim
-	mapstructure.Decode(userClaim, &smapClaim)
-	userRepo := repository.GetUserRepository()
-
-	user, _ := userRepo.GetById(smapClaim.UserID)
-	return user
+	user := c.MustGet("user")
+	var exstingUser models.User
+	mapstructure.Decode(user, &exstingUser)
+	return &exstingUser
 }

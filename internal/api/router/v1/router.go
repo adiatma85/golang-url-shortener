@@ -49,8 +49,13 @@ func Setup() *gin.Engine {
 	{
 		authGroup.POST("login", authHandler.Login)
 		authGroup.POST("register", authHandler.Register)
-		authGroup.POST("profile", middleware.AuthJWT(), authHandler.UpdateProfile)
-		authGroup.DELETE("profile", middleware.AuthJWT(), authHandler.DeleteProfile)
+		profileAuthGroup := authGroup.Group("profile")
+		profileAuthGroup.Use(middleware.AuthJWT())
+		{
+			// profileAuthGroup.GET("profile")
+			profileAuthGroup.PUT("profile", authHandler.UpdateProfile)
+			profileAuthGroup.DELETE("profile", authHandler.DeleteProfile)
+		}
 	}
 
 	// UrlGroup with "url" prefix
