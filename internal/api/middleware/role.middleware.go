@@ -11,17 +11,19 @@ import (
 )
 
 // Is AdminMiddleware
-func IsAdminMiddleware(c *gin.Context) {
-	userClaim := c.MustGet("user_claim")
-	var smapClaim crypto.JwtCustomClaim
-	mapstructure.Decode(userClaim, &smapClaim)
-	userRepo := repository.GetUserRepository()
+func IsAdminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userClaim := c.MustGet("user_claim")
+		var smapClaim crypto.JwtCustomClaim
+		mapstructure.Decode(userClaim, &smapClaim)
+		userRepo := repository.GetUserRepository()
 
-	user, _ := userRepo.GetById(smapClaim.UserID)
-	if user.Role.Name != "ADMIN" {
-		response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
-		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		user, _ := userRepo.GetById(smapClaim.UserID)
+		if user.Role.Name != "ADMIN" {
+			response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		}
+
+		c.Next()
 	}
-
-	c.Next()
 }

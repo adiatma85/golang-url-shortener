@@ -61,7 +61,7 @@ func Setup() *gin.Engine {
 
 		// Authorized Url Group with "url/authorized" prefix
 		authorizedUrlGroup := urlGroup.Group("authorized")
-		authorizedUrlGroup.Use(middleware.AuthJWT())
+		authorizedUrlGroup.Use(middleware.AuthJWT(), middleware.IsAdminMiddleware())
 		{
 			authorizedUrlGroup.POST("", urlHandler.AuthorizedCreate)
 			authorizedUrlGroup.PUT(":id", urlHandler.AuthorizedUpdate)
@@ -71,9 +71,9 @@ func Setup() *gin.Engine {
 
 	// Testing Auth Group
 	testingAuthGroup := v1Route.Group("testing")
-	testingAuthGroup.Use(middleware.AuthJWT(), middleware.IsAdminMiddleware)
+	testingAuthGroup.Use(middleware.AuthJWT(), middleware.IsAdminMiddleware())
 	{
-		testingAuthGroup.GET("", middleware.IsAdminMiddleware, func(ctx *gin.Context) {
+		testingAuthGroup.GET("", func(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, "not fail")
 		})
 	}
