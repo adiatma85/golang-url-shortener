@@ -61,17 +61,21 @@ func Setup() *gin.Engine {
 
 		// Authorized Url Group with "url/authorized" prefix
 		authorizedUrlGroup := urlGroup.Group("authorized")
+		authorizedUrlGroup.Use(middleware.AuthJWT())
 		{
-			authorizedUrlGroup.POST("", middleware.AuthJWT(), urlHandler.AuthorizedCreate)
-			authorizedUrlGroup.PUT(":id", middleware.AuthJWT(), urlHandler.AuthorizedUpdate)
-			authorizedUrlGroup.DELETE(":id", middleware.AuthJWT(), urlHandler.AuthorizedDelete)
+			authorizedUrlGroup.POST("", urlHandler.AuthorizedCreate)
+			authorizedUrlGroup.PUT(":id", urlHandler.AuthorizedUpdate)
+			authorizedUrlGroup.DELETE(":id", urlHandler.AuthorizedDelete)
 		}
 	}
 
 	// Testing Auth Group
 	testingAuthGroup := v1Route.Group("testing")
+	testingAuthGroup.Use(middleware.AuthJWT(), middleware.IsAdminMiddleware)
 	{
-		testingAuthGroup.GET("", middleware.AuthJWT(), middleware.IsAdminMiddleware)
+		testingAuthGroup.GET("", middleware.IsAdminMiddleware, func(ctx *gin.Context) {
+			ctx.JSON(http.StatusOK, "not fail")
+		})
 	}
 	return app
 }
