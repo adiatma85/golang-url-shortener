@@ -50,7 +50,7 @@ func Setup() *gin.Engine {
 		authGroup.POST("login", authHandler.Login)
 		authGroup.POST("register", authHandler.Register)
 		profileAuthGroup := authGroup.Group("profile")
-		profileAuthGroup.Use(middleware.AuthJWT())
+		profileAuthGroup.Use(middleware.AuthJWT(), middleware.IsAdminOrUserMiddleware())
 		{
 			// profileAuthGroup.GET("profile")
 			profileAuthGroup.PUT("profile", authHandler.UpdateProfile)
@@ -61,14 +61,15 @@ func Setup() *gin.Engine {
 	// UrlGroup with "url" prefix
 	urlGroup := v1Route.Group("url")
 	urlHandler := handler.GetUrlHandler()
+	urlGroup.Use(middleware.AuthJWT())
 	{
-		urlGroup.POST("", urlHandler.Create)
-		urlGroup.GET("query", urlHandler.Query)
-		urlGroup.GET("load/:short_token", urlHandler.Load)
+		urlGroup.POST("", middleware.IsAdminOrUserMiddleware(), urlHandler.Create)
+		urlGroup.GET("query", middleware.IsAdminOrUserMiddleware(), urlHandler.Query)
+		urlGroup.GET("load/:short_token", middleware.IsAdminOrUserMiddleware(), urlHandler.Load)
 
 		// Authorized Url Group with "url/authorized" prefix
 		authorizedUrlGroup := urlGroup.Group("authorized")
-		authorizedUrlGroup.Use(middleware.AuthJWT(), middleware.IsAdminMiddleware())
+		authorizedUrlGroup.Use(middleware.IsAdminMiddleware())
 		{
 			authorizedUrlGroup.POST("", urlHandler.AuthorizedCreate)
 			authorizedUrlGroup.PUT(":id", urlHandler.AuthorizedUpdate)

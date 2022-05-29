@@ -4,40 +4,46 @@ import (
 	"net/http"
 
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/constant"
-	"github.com/adiatma85/golang-rest-template-api/internal/pkg/models"
+	"github.com/adiatma85/golang-rest-template-api/pkg/helpers"
 	"github.com/adiatma85/golang-rest-template-api/pkg/response"
 	"github.com/gin-gonic/gin"
-	"github.com/mitchellh/mapstructure"
 )
 
 // Is AdminMiddleware
 func IsAdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := extractUserFromClaim(c)
-		if user.Role.Name != constant.ADMINROLE {
-			response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		user := helpers.ExtractUserFromClaim(c)
+		if user.Role.Name == constant.ADMINROLE {
+			c.Next()
+			return
 		}
-		c.Next()
+		response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 	}
 }
 
 // IsUserMiddleware
 func IsUserMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := extractUserFromClaim(c)
+		user := helpers.ExtractUserFromClaim(c)
 		if user.Role.Name != constant.USERROLE {
-			response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			c.Next()
+			return
 		}
-		c.Next()
+		response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 	}
 }
 
-// Helper function to extract user
-func extractUserFromClaim(c *gin.Context) *models.User {
-	user := c.MustGet("user")
-	var exstingUser models.User
-	mapstructure.Decode(user, &exstingUser)
-	return &exstingUser
+// IsAdminOrUserMiddleware
+func IsAdminOrUserMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := helpers.ExtractUserFromClaim(c)
+		if user.Role.Name == constant.ADMINROLE || user.Role.Name == constant.USERROLE {
+			c.Next()
+			return
+		}
+		response := response.BuildFailedResponse("you do not have permission to access this request", "unauhtorized request")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+	}
 }

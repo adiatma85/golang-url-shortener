@@ -64,7 +64,9 @@ func (handler *UrlHandler) Create(c *gin.Context) {
 	smapping.FillStruct(urlModel, smapping.MapFields(&newUrlRequest))
 
 	// For now it's some kind of hard-coded
+	user := helpers.ExtractUserFromClaim(c)
 	urlModel.ShortenUrl = helpers.RandStringBytesMaskImprSrcSB(handler.UrlCharacterLong)
+	urlModel.UserId = user.ID
 
 	if newUrl, err := urlRepo.Create(*urlModel); err != nil {
 		response := response.BuildFailedResponse("failed to add new shortener", err.Error())
