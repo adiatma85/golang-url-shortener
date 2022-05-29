@@ -36,8 +36,8 @@ func Setup() *gin.Engine {
 
 	// Home to return what status it is
 	{
-		v1Route.GET("/", func(ctx *gin.Context) {
-			ctx.JSON(http.StatusOK, gin.H{
+		v1Route.GET("/", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
 				"status": "ok",
 			})
 		})
@@ -49,24 +49,32 @@ func Setup() *gin.Engine {
 	{
 		authGroup.POST("login", authHandler.Login)
 		authGroup.POST("register", authHandler.Register)
+		profileAuthGroup := authGroup.Group("profile")
+		profileAuthGroup.Use(middleware.AuthJWT(), middleware.IsAdminOrUserMiddleware())
+		{
+			// profileAuthGroup.GET("profile")
+			profileAuthGroup.PUT("profile", authHandler.UpdateProfile)
+			profileAuthGroup.DELETE("profile", authHandler.DeleteProfile)
+		}
 	}
 
 	// UrlGroup with "url" prefix
 	urlGroup := v1Route.Group("url")
 	urlHandler := handler.GetUrlHandler()
+	urlGroup.Use(middleware.AuthJWT())
 	{
-		urlGroup.POST("", urlHandler.Create)
-		urlGroup.GET("query", urlHandler.Query)
-		urlGroup.GET("load/:short_token", urlHandler.Load)
+		urlGroup.POST("", middleware.IsAdminOrUserMiddleware(), urlHandler.Create)
+		urlGroup.GET("query", middleware.IsAdminOrUserMiddleware(), urlHandler.Query)
+		urlGroup.GET("load/:short_token", middleware.IsAdminOrUserMiddleware(), urlHandler.Load)
 
 		// Authorized Url Group with "url/authorized" prefix
 		authorizedUrlGroup := urlGroup.Group("authorized")
+		authorizedUrlGroup.Use(middleware.IsAdminMiddleware())
 		{
-			authorizedUrlGroup.POST("", middleware.AuthJWT(), urlHandler.AuthorizedCreate)
-			authorizedUrlGroup.PUT(":id", middleware.AuthJWT(), urlHandler.AuthorizedUpdate)
-			authorizedUrlGroup.DELETE(":id", middleware.AuthJWT(), urlHandler.AuthorizedDelete)
+			authorizedUrlGroup.POST("", urlHandler.AuthorizedCreate)
+			authorizedUrlGroup.PUT(":id", urlHandler.AuthorizedUpdate)
+			authorizedUrlGroup.DELETE(":id", urlHandler.AuthorizedDelete)
 		}
 	}
-
 	return app
 }

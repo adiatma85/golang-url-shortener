@@ -13,12 +13,13 @@ var jwtHelper *jwtCryptoHelper
 // Contract fot JWT Crypto Helper
 type JWTCryptoHelper interface {
 	GenerateToken(UserId string) (string, error)
-	ValidateToken(tokenString string) (bool, error)
+	ValidateToken(tokenString string) (*jwt.Token, bool, error)
+	ExtractClaim(token *jwt.Token) (jwt.MapClaims, bool)
 }
 
 // Struct for jwt custom claim
-type jwtCustomClaim struct {
-	UserID string `json:"user_id"`
+type JwtCustomClaim struct {
+	UserID string `json:"user_id" mapstructure:"user_id"`
 	jwt.StandardClaims
 }
 
@@ -37,7 +38,7 @@ func GetJWTCrypto() JWTCryptoHelper {
 // Func to Generate Token with User ID as main issuer
 func (helper *jwtCryptoHelper) GenerateToken(UserID string) (string, error) {
 	serverConfiguration := config.GetConfig().Server
-	claims := &jwtCustomClaim{
+	claims := &JwtCustomClaim{
 		UserID,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(serverConfiguration.ExpiresHour)).Unix(),
@@ -54,7 +55,7 @@ func (helper *jwtCryptoHelper) GenerateToken(UserID string) (string, error) {
 }
 
 // Func to validate token
-func (helper *jwtCryptoHelper) ValidateToken(tokenString string) (bool, error) {
+func (helper *jwtCryptoHelper) ValidateToken(tokenString string) (*jwt.Token, bool, error) {
 	serverConfiguration := config.GetConfig().Server
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -63,7 +64,15 @@ func (helper *jwtCryptoHelper) ValidateToken(tokenString string) (bool, error) {
 		return []byte(serverConfiguration.Secret), nil
 	})
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
-	return token.Valid, nil
+	return token, token.Valid, nil
+}
+
+// Func to extract claim
+func (helper *jwtCryptoHelper) ExtractClaim(token *jwt.Token) (jwt.MapClaims, bool) {
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		return claims, ok
+	}
+	return nil, false
 }

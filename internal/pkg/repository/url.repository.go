@@ -59,7 +59,7 @@ func (repo *UrlRepository) Create(url models.Url) (models.Url, error) {
 // Func to Query of WHERE with pagination
 func (repo *UrlRepository) Query(pagination helpers.Pagination) (*helpers.Pagination, error) {
 	var urls []models.Url
-	outputPagination, err := Query(&models.Url{}, &urls, pagination, []string{})
+	outputPagination, err := Query(&models.Url{}, &urls, pagination, []string{"User"})
 	// If error when searching for query
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (repo *UrlRepository) GetByShortenUniqueId(uniqueId string) (*models.Url, e
 	var url models.Url
 	where := models.Url{}
 	where.ShortenUrl = uniqueId
-	_, err := First(&where, &url, []string{})
+	_, err := First(&where, &url, []string{"User"})
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (repo *UrlRepository) GetById(urlId string) (*models.Url, error) {
 	var url models.Url
 	where := models.Url{}
 	where.ID, _ = strconv.ParseUint(urlId, 10, 64)
-	_, err := First(&where, &url, []string{})
+	_, err := First(&where, &url, []string{"User"})
 	if err != nil {
 		return nil, err
 	}

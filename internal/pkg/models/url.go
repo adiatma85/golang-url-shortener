@@ -10,6 +10,8 @@ type Url struct {
 	Model
 	OriginalUrl string `gorm:"type:varchar(255)" json:"url"`
 	ShortenUrl  string `gorm:"type:varchar(255)" json:"shorten_url"`
+	UserId      uint64 `gorm:"not null" json:"-" validation:"user_id"`
+	User        User   `gorm:"foreignkey:UserId;constraint:onUpdate:CASCADE,onDelete:CASCADE" json:"user"`
 }
 
 // Hook Aftercreate to return formatted url in shorten url

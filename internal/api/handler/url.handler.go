@@ -64,7 +64,9 @@ func (handler *UrlHandler) Create(c *gin.Context) {
 	smapping.FillStruct(urlModel, smapping.MapFields(&newUrlRequest))
 
 	// For now it's some kind of hard-coded
+	user := helpers.ExtractUserFromClaim(c)
 	urlModel.ShortenUrl = helpers.RandStringBytesMaskImprSrcSB(handler.UrlCharacterLong)
+	urlModel.UserId = user.ID
 
 	if newUrl, err := urlRepo.Create(*urlModel); err != nil {
 		response := response.BuildFailedResponse("failed to add new shortener", err.Error())
@@ -174,7 +176,7 @@ func (handler *UrlHandler) AuthorizedUpdate(c *gin.Context) {
 	updateModel := &models.Url{}
 
 	// smapping the update request to models
-	updateModel.ID, _ = strconv.ParseUint(c.Param("urlId"), 10, 64)
+	updateModel.ID, _ = strconv.ParseUint(c.Param("id"), 10, 64)
 	smapping.FillStruct(updateModel, smapping.MapFields(&updateRequest))
 
 	urlRepo := handler.UrlRepo
@@ -192,7 +194,7 @@ func (handler *UrlHandler) AuthorizedUpdate(c *gin.Context) {
 // Func to authorized Delete existed URL (and it's own of their respective user)
 func (handler *UrlHandler) AuthorizedDelete(c *gin.Context) {
 	deleteModel := &models.Url{}
-	deleteModel.ID, _ = strconv.ParseUint(c.Param("urlId"), 10, 64)
+	deleteModel.ID, _ = strconv.ParseUint(c.Param("id"), 10, 64)
 
 	urlRepo := handler.UrlRepo
 

@@ -4,10 +4,14 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/adiatma85/golang-rest-template-api/internal/pkg/models"
+	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 )
 
 // Reference --> https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
-
+// Function below used to create random fixed string. It used to make shortener version of link
 const (
 	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	letterIdxBits = 6                    // 6 bits to represent a letter index
@@ -34,4 +38,12 @@ func RandStringBytesMaskImprSrcSB(n int) string {
 	}
 
 	return sb.String()
+}
+
+// Helper Function below used in Role Middleware and Handler to extract User Entity from
+func ExtractUserFromClaim(c *gin.Context) *models.User {
+	user := c.MustGet("user")
+	var exstingUser models.User
+	mapstructure.Decode(user, &exstingUser)
+	return &exstingUser
 }
