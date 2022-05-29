@@ -68,14 +68,5 @@ func Setup() *gin.Engine {
 			authorizedUrlGroup.DELETE(":id", urlHandler.AuthorizedDelete)
 		}
 	}
-
-	// Testing Auth Group
-	testingAuthGroup := v1Route.Group("testing")
-	testingAuthGroup.Use(middleware.AuthJWT(), middleware.IsAdminMiddleware())
-	{
-		testingAuthGroup.GET("", func(ctx *gin.Context) {
-			ctx.JSON(http.StatusOK, "not fail")
-		})
-	}
 	return app
 }
