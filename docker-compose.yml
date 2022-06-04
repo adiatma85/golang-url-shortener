@@ -16,7 +16,7 @@ services:
     # <Port exposed> : < Postgres Port running inside container>
       - '5433:5432'
     volumes: 
-      - my-db:/var/lib/postgresql/data
+      - my-db:/var/lib/postgresql/data/composed/url_shortener
     networks:
       - default
 
