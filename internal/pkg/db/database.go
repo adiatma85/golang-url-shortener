@@ -19,6 +19,11 @@ var (
 	err error
 )
 
+// Func to Get Database Instance
+func GetDB() *gorm.DB {
+	return DB
+}
+
 // Database instance
 type Database struct {
 	*gorm.DB
@@ -43,18 +48,9 @@ func SetupDB() {
 		Logger: logger.Default.LogMode(logger.Silent),
 	}
 
-	switch driver {
-	case "mysql":
-		db, err = gorm.Open(mysql.Open(username+":"+password+"@tcp("+host+":"+port+")/"+database+"?charset=utf8&parseTime=True&loc=Local"), gormConfig)
-		if err != nil {
-			fmt.Println("db err:", err)
-		}
-	case "postgres":
-		db, err = gorm.Open(postgres.Open("host="+host+" port="+port+" user="+username+" dbname="+database+"  sslmode=disable password="+password), gormConfig)
-		if err != nil {
-			fmt.Println("db err:", err)
-		}
-	}
+	// Call for subroutine
+	db = loadDatabase(host, username, password, port, database, driver, gormConfig)
+
 	// Set up the connection pools
 	sqlDb, _ := db.DB()
 	sqlDb.SetMaxIdleConns(configuration.Database.MaxIdleConns)
@@ -66,16 +62,36 @@ func SetupDB() {
 }
 
 // Setup for testing database
-func SetupTestingDb(host, username, password, port, database string) {
-	// For the sake of simplicity, right now database testing is in mysql
-	db, err := gorm.Open(mysql.Open(username+":"+password+"@tcp("+host+":"+port+")/"+database+"?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
-	if err != nil {
-		fmt.Println("db err for testing :", err)
-		panic(err.Error())
-	}
+func SetupTestingDb(host, username, password, port, database, driver string) {
+	var db = DB
+	// Zero Gorm Config
+	gormConfig := &gorm.Config{}
+	db = loadDatabase(host, username, password, port, database, driver, gormConfig)
 
 	DB = db
+
 	migration()
+}
+
+// SubFunction
+func loadDatabase(host, username, password, port, database, driver string, gormConfig *gorm.Config) *gorm.DB {
+	var db *gorm.DB
+	switch driver {
+	case "mysql":
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", username, password, host, port, database)
+		db, err = gorm.Open(mysql.Open(dsn), gormConfig)
+		if err != nil {
+			fmt.Println("db err:", err)
+		}
+	case "postgres":
+		dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", host, port, username, database, password)
+		db, err = gorm.Open(postgres.Open(dsn), gormConfig)
+		if err != nil {
+			fmt.Println("db err:", err)
+		}
+	}
+
+	return db
 }
 
 // AutoMigrate project models
@@ -93,8 +109,4 @@ func seeding() {
 			DB.Create(&role)
 		}
 	}
-}
-
-func GetDB() *gorm.DB {
-	return DB
 }
