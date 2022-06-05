@@ -1,10 +1,12 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/config"
+	"github.com/adiatma85/golang-rest-template-api/internal/pkg/db/seeders"
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -79,6 +81,18 @@ func SetupTestingDb(host, username, password, port, database string) {
 // AutoMigrate project models
 func migration() {
 	DB.AutoMigrate(&models.Url{}, &models.User{})
+	// Seeding
+	seeding()
+}
+
+// Seeding
+func seeding() {
+	// Role Seeding
+	if err := DB.First(&models.Role{}).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		for _, role := range seeders.Roles {
+			DB.Create(&role)
+		}
+	}
 }
 
 func GetDB() *gorm.DB {
