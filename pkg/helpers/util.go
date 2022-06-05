@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,4 +47,10 @@ func ExtractUserFromClaim(c *gin.Context) *models.User {
 	var exstingUser models.User
 	mapstructure.Decode(user, &exstingUser)
 	return &exstingUser
+}
+
+// Helper to change string to uint
+func ConvertStringtoUint(id string) uint {
+	typeUint64, _ := strconv.ParseUint(id, 10, 64)
+	return uint(typeUint64)
 }

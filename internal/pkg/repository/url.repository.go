@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"strconv"
-
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/db"
 	"github.com/adiatma85/golang-rest-template-api/internal/pkg/models"
 	"github.com/adiatma85/golang-rest-template-api/pkg/helpers"
@@ -83,7 +81,7 @@ func (repo *UrlRepository) GetByShortenUniqueId(uniqueId string) (*models.Url, e
 func (repo *UrlRepository) GetById(urlId string) (*models.Url, error) {
 	var url models.Url
 	where := models.Url{}
-	where.ID, _ = strconv.ParseUint(urlId, 10, 64)
+	where.ID = helpers.ConvertStringtoUint(urlId)
 	_, err := First(&where, &url, []string{"User"})
 	if err != nil {
 		return nil, err

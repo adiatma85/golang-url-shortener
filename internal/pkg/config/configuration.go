@@ -38,6 +38,7 @@ type DatabaseConfiguration struct {
 	MaxLifetime  int    `mapstructure:"DATABASE_MAX_LIFETIME"`
 	MaxOpenConns int    `mapstructure:"DATABASE_MAX_OPEN_CONNS"`
 	MaxIdleConns int    `mapstructure:"DATABASE_MAX_IDLE_CONNS"`
+	SslMode      string `mapstructure:"DATABASE_SSL_MODE"`
 }
 
 // Struct of Database for Testing Configuration instance
@@ -51,6 +52,7 @@ type DatabaseTestConfiguration struct {
 	MaxLifetime  int    `mapstructure:"DATABASE_TEST_MAX_LIFETIME"`
 	MaxOpenConns int    `mapstructure:"DATABASE_TEST_MAX_OPEN_CONNS"`
 	MaxIdleConns int    `mapstructure:"DATABASE_TEST_MAX_IDLE_CONNS"`
+	SslMode      string `mapstructure:"DATABASE_TEST_SSL_MODE"`
 }
 
 // Setup the configuration

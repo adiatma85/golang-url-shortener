@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+   db:
+    container_name: golang-url-shortener-postgres-test
+    image: "postgres"
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - PGDATA=/var/lib/postgresql/data/url_shortener/
+    ports:
+    # <Port exposed> : < Postgres Port running inside container>
+      - '5433:5432'
+    volumes: 
+      - db:/var/lib/postgresql/data/test/url_shortener
+
+volumes:
+  db:
+    driver: local
