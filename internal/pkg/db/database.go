@@ -42,6 +42,7 @@ func SetupDB() {
 	password := configuration.Database.Password
 	host := configuration.Database.Host
 	port := configuration.Database.Port
+	sslMode := configuration.Database.SslMode
 
 	// Gorm config
 	gormConfig := &gorm.Config{
@@ -49,7 +50,7 @@ func SetupDB() {
 	}
 
 	// Call for subroutine
-	db = loadDatabase(host, username, password, port, database, driver, gormConfig)
+	db = loadDatabase(host, username, password, port, database, driver, sslMode, gormConfig)
 
 	// Set up the connection pools
 	sqlDb, _ := db.DB()
@@ -62,11 +63,11 @@ func SetupDB() {
 }
 
 // Setup for testing database
-func SetupTestingDb(host, username, password, port, database, driver string) {
+func SetupTestingDb(host, username, password, port, database, driver, sslMode string) {
 	var db = DB
 	// Zero Gorm Config
 	gormConfig := &gorm.Config{}
-	db = loadDatabase(host, username, password, port, database, driver, gormConfig)
+	db = loadDatabase(host, username, password, port, database, driver, sslMode, gormConfig)
 
 	DB = db
 
@@ -74,7 +75,7 @@ func SetupTestingDb(host, username, password, port, database, driver string) {
 }
 
 // SubFunction
-func loadDatabase(host, username, password, port, database, driver string, gormConfig *gorm.Config) *gorm.DB {
+func loadDatabase(host, username, password, port, database, driver, sslMode string, gormConfig *gorm.Config) *gorm.DB {
 	var db *gorm.DB
 	switch driver {
 	case "mysql":
@@ -84,7 +85,7 @@ func loadDatabase(host, username, password, port, database, driver string, gormC
 			fmt.Println("db err:", err)
 		}
 	case "postgres":
-		dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", host, port, username, database, password)
+		dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=%s password=%s", host, port, username, database, sslMode, password)
 		db, err = gorm.Open(postgres.Open(dsn), gormConfig)
 		if err != nil {
 			fmt.Println("db err:", err)
