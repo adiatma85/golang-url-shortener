@@ -1,0 +1,124 @@
+{
+    "Meta": {
+        "Title": "Go-Template",
+        "Description": "New Template for Golang",
+        "Host": "{{ HOST }}",
+        "Basepath": "/",
+        "Version": ""
+    },
+    "Gin": {
+        "Host": "{{ HOST }}",
+        "Port": "{{ PORT }}",
+        "Mode": "{{ ENV_MODE }}",
+        "Timeout": "1000s",
+        "ShutdownTimeout": "10s",
+        "LogRequest": "true",
+        "LogResponse": "true",
+        "CORS": {
+            "Mode": "allowall"
+        },
+        "Meta": "$ref:#/Meta",
+        "Swagger": {
+            "Basicauth": {
+                "Password": "swagger",
+                "Username": "admon"
+            },
+            "Enabled": "true",
+            "Path": "/swagger"
+        },
+        "Platform": {
+            "BasicAuth": {
+                "Password": "platform",
+                "Username": "admon"
+            },
+            "Enabled": "true",
+            "Path": "/platform"
+        },
+        "Dummy": {
+            "Enabled": "true",
+            "Path": "/dummy"
+        },
+        "Instrument": {
+            "Metrics": {
+                "Enabled": "true",
+                "Path": "/metrics",
+                "BasicAuth": {
+                    "Username": "admon",
+                    "Password": "instrument"
+                }
+            }
+        },
+        "Profiler": {
+            "Pprof": {
+                "Enabled": "true",
+                "PathPrefix": "/pprof",
+                "BasicAuth": {
+                    "UserName": "admon",
+                    "Password": "profiler"
+                }
+            }
+        }
+    },
+    "Log": {
+        "Level": "debug"
+    },
+    "SQL": {
+        "UseInstrument": "true",
+        "LogQuery": "true",
+        "Driver": "{{ DATABASE_DRIVER }}",
+        "Follower": {
+            "Host": "{{ DATABASE_HOST }}",
+            "Port": "{{ DATABASE_PORT }}",
+            "DB": "{{ DATABASE_NAME }}",
+            "User": "{{ DATABASE_USER }}",
+            "Password": "{{ DATABASE_PASSWORD }}",
+            "SSL": null,
+            "Schema": null,
+            "Options": {
+                "MaxLifeTime": "",
+                "MaxIdle": "25",
+                "MaxOpen": "25"
+             }
+        },
+        "Leader": {
+            "Host": "{{ DATABASE_HOST }}",
+            "Port": "{{ DATABASE_PORT }}",
+            "DB": "{{ DATABASE_NAME }}",
+            "User": "{{ DATABASE_USER }}",
+            "Password": "{{ DATABASE_PASSWORD }}",
+            "SSL": null,
+            "Schema": null,
+            "Options": {
+                "MaxLifeTime": "",
+                "MaxIdle": "25",
+                "MaxOpen": "25"
+             }
+        }
+    },
+    "Instrument": {
+        "Metrics": {
+            "Enabled": "true"
+        }
+    },
+    "Redis": {
+        "Protocol": "",
+        "Host": "{{ REDIS_HOST }}",
+        "Port": "6379",
+        "Username": "",
+        "Password": "",
+        "TLS": {
+            "Enabled": "",
+            "InsecureSkipVerify": ""
+        }
+    },
+    "Translator":{
+        "FallbackLanguageID": "en",
+        "SupportedLanguageIDs": ["id"],
+	    "TranslationDir": "./docs/translation"
+    },
+    "JwtAuth": {
+        "AccessTokenExpLimit": "1h",
+        "RefreshTokenExpLimit": "168h",
+        "Secret": "{{ APP_SECRET }}"
+    }
+}

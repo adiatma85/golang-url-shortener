@@ -11,7 +11,6 @@ build/*
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-coverage.html
 
 # Local specific files
 .DS_Store
@@ -19,18 +18,26 @@ coverage.html
 
 # Docker Storage Files
 env/storage/
+deploy/storage/
 
 # API Documentation
 docs/swagger
 
 #Go
 vendor/
-log/
 
 # Configuration File
-etc/cfg/conf.yaml
-etc/cfg/conf.json
+etc/cfg/*
 
 # Environment Variables
 .env
 */*.env
+
+# Caaddy file production
+deploy/caddy/caddy.production.dockerfile
+deploy/caddy/Caddyfile.production
+deploy/caddy_config/*
+deploy/caddy_data/*
+
+# Docs sql file
+./docs/sql/temp.sql

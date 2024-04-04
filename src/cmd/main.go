@@ -2,17 +2,25 @@ package main
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/adiatma85/golang-url-shortener/src/utils/config"
+	"github.com/adiatma85/golang-url-shortener/utils/config"
 	"github.com/adiatma85/own-go-sdk/configreader"
 	"github.com/adiatma85/own-go-sdk/instrument"
+	"github.com/adiatma85/own-go-sdk/jwtAuth"
 	"github.com/adiatma85/own-go-sdk/log"
+	"github.com/adiatma85/own-go-sdk/parser"
 	"github.com/adiatma85/own-go-sdk/sql"
 )
 
+// @contact.name   Rahmadhani Lucky Adiatma
+
+// @securitydefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 const (
-	configfile string = "./etc/cfg/conf.json"
+	configfile   string = "./etc/cfg/conf.json"
+	templatefile string = "./etc/tpl/conf.template.json"
 )
 
 // Read from the config file
@@ -39,13 +47,14 @@ func main() {
 
 	// init db conn
 	db := sql.Init(cfg.SQL, log, instr)
-	// _ = sql.Init(cfg.SQL, log, instr)
 
-	fmt.Println("Config adalah: ", cfg.Instrument)
+	// init the parser
+	parsers := parser.InitParser(log, cfg.Parser)
 
-	log.Info(context.Background(), "Ptesting log")
+	// Init the jwt
+	jwt := jwtAuth.Init(cfg.JwtAuth)
 
-	fmt.Println("Database adalah: ", db.Follower())
-
-	log.Info(context.Background(), db.Follower())
+	log.Info(context.Background(), db)
+	log.Info(context.Background(), parsers)
+	log.Info(context.Background(), jwt)
 }

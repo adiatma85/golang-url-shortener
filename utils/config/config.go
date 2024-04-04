@@ -4,7 +4,10 @@ import (
 	"time"
 
 	"github.com/adiatma85/own-go-sdk/instrument"
+	"github.com/adiatma85/own-go-sdk/jwtAuth"
 	"github.com/adiatma85/own-go-sdk/log"
+	"github.com/adiatma85/own-go-sdk/parser"
+	"github.com/adiatma85/own-go-sdk/redis"
 	"github.com/adiatma85/own-go-sdk/sql"
 )
 
@@ -12,8 +15,11 @@ type Application struct {
 	Log         log.Config
 	Meta        ApplicationMeta
 	SQL         sql.Config
+	Parser      parser.Options
 	Instrument  instrument.Config
 	Concurrency ConcurrencyConfig
+	Redis       redis.Config
+	JwtAuth     jwtAuth.Config
 }
 
 type ApplicationMeta struct {
