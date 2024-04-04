@@ -23,14 +23,6 @@ const (
 	templatefile string = "./etc/tpl/conf.template.json"
 )
 
-// Read from the config file
-
-// Get in SQL
-
-// SQL Init
-
-// Test
-
 func main() {
 	// init config
 	cfg := config.Init()

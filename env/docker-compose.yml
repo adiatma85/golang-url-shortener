@@ -1,14 +1,6 @@
 version: '3'
 services:
-  # mongo:
-  #   image: mongo
-  #   restart: on-failure
-  #   ports:
-  #     - "27017:27017"
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: password
-
+  # Mysql
   mysql:
     # use this for mac
     platform: linux/amd64
@@ -28,21 +20,10 @@ services:
       - "./storage/mysql/data:/var/lib/mysql"
     environment:
       MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: golang_url_shortener
       MYSQL_TCP_PORT: 3306
 
-  # postgres:
-  #   image: onjin/alpine-postgres:latest
-  #   restart: on-failure
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - "./storage/postgres/scripts:/docker-entrypoint-initdb.d/"
-  #     - "./storage/postgres/data:/var/lib/postgresql/data"
-  #   environment:
-  #     LC_ALL: C.UTF-8
-  #     POSTGRES_USER: root
-  #     POSTGRES_PASSWORD: password
-
+  # Redis
   redis:
     image: redis:6
     restart: on-failure
@@ -55,18 +36,14 @@ services:
     ports:
       - "6379:6379"
 
-  pushgateway:
-    image: weaveworks/prom-aggregation-gateway:latest
-    restart: on-failure
-    ports:
-      - 9091:80
-
-  # elasticsearch :
-  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+  # Main application in here
+  # go_url_shortener:
+  #   image: adiatma85/go_url_shortener:latest
+  #   depends_on:
+  #     - redis
   #   ports:
-  #     - "9201:9200"
-  #   environment:
-  #       - discovery.type=single-node
-  #       - cluster.name=elasticsearch
-  #   volumes:
-  #       - ./storage/es/data:/usr/share/elasticsearch/data
+  #     - "8080:8080"
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #   restart: on-failure
