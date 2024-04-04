@@ -14,6 +14,7 @@ import (
 type Application struct {
 	Log         log.Config
 	Meta        ApplicationMeta
+	Gin         GinConfig
 	SQL         sql.Config
 	Parser      parser.Options
 	Instrument  instrument.Config

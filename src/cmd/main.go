@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/adiatma85/golang-url-shortener/src/handler"
 	"github.com/adiatma85/golang-url-shortener/utils/config"
 	"github.com/adiatma85/own-go-sdk/configreader"
 	"github.com/adiatma85/own-go-sdk/instrument"
@@ -49,4 +50,9 @@ func main() {
 	log.Info(context.Background(), db)
 	log.Info(context.Background(), parsers)
 	log.Info(context.Background(), jwt)
+
+	// Init the GIN
+	rest := handler.Init(handler.InitParam{Conf: cfg.Gin, Json: parsers.JSONParser(), Log: log, Instrument: instr, JwtAuth: jwt})
+
+	rest.Run()
 }
