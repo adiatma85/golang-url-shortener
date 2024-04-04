@@ -1,0 +1,49 @@
+version: '3'
+services:
+  # Mysql
+  mysql:
+    # use this for mac
+    platform: linux/amd64
+    image: mysql:8.0.26
+
+    # use this for linux
+    # platform: linux/x86_64
+    # image: mysql:8.0.16
+
+    # ======================= #
+    restart: on-failure
+    ports:
+      - "3306:3306"
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - "./storage/mysql/scripts:/docker-entrypoint-initdb.d"
+      - "./storage/mysql/data:/var/lib/mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: golang_url_shortener
+      MYSQL_TCP_PORT: 3306
+
+  # Redis
+  redis:
+    image: redis:6
+    restart: on-failure
+    entrypoint:
+      - "redis-server"
+    volumes:
+      - "./storage/redis/conf:/usr/lib/redis/conf"
+      - "./storage/redis/modules:/usr/lib/redis/modules"
+      - "./storage/redis/data:/data"
+    ports:
+      - "6379:6379"
+
+  # Main application in here
+  # go_url_shortener:
+  #   image: adiatma85/go_url_shortener:latest
+  #   depends_on:
+  #     - redis
+  #   ports:
+  #     - "8080:8080"
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #   restart: on-failure

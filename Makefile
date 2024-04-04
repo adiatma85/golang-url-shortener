@@ -1,18 +1,25 @@
-# Storage up if you don't have native database in your host
-storage-up:
-	docker-compose -f docker-compose-pg-storage.yml up -d --remove-orphans
+.PHONY: swag-install
+swag-install:
+	@go install github.com/swaggo/swag/cmd/swag@v1.6.7
 
-# Storage down to deactivate it
-storage-down:
-	docker-compose -f docker-compose-pg-storage.yml down
+.PHONY: swaggo
+swaggo:
+	@/bin/rm -rf ./docs/swagger
+	@`go env GOPATH`/bin/swag init -g ./src/cmd/main.go -o ./docs/swagger --parseInternal	
 
-# Storage test up (Storage that dedicated for testing)
-storage-up-test:
-	docker-compose -f docker-compose-pg-storage-test.yml up -d --remove-orphans
+.PHONY: prepare
+prepare: swag-install swaggo
+	@go mod download
 
-# Storage down to deactivate storage for testing
-storage-down-test:
-	docker-compose -f docker-compose-pg-storage-test.yml down
+.PHONY: build
+build:
+	@go build -o ./build/app ./src/cmd
 
-server:
-	go run main.go
+.PHONY: build-alpine
+build-alpine:
+	@go mod tidy && \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./build/app ./src/cmd
+
+.PHONY: run
+run: swaggo build
+	@./build/app
