@@ -1,0 +1,174 @@
+name: "Staging: Build & Deploy"
+
+concurrency:
+  group: build-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+
+env:
+  DOCKERHUB_REPOSITORY: adiatma85/golang-url-shortener
+  CADDY_DOCKERHUB_REPO: adiatma85/caddy-golang-url-shortener
+
+jobs:
+  build_deploy:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v3.3.1
+        with:
+          go-version: 1.21
+          cache: true
+      
+      # - name: Make secret file
+      #   run: |
+      #     echo '{
+      #       "HOST": "${{ secrets.HOST }}",
+      #       "PORT": "${{ secrets.PORT }}",
+      #       "ENV_MODE": "${{ secrets.ENV_MODE }}",
+      #       "DATABASE_HOST": "${{ secrets.DATABASE_HOST }}",
+      #       "DATABASE_NAME": "${{ secrets.DATABASE_NAME }}",
+      #       "DATABASE_PORT": "${{ secrets.DATABASE_PORT }}",
+      #       "DATABASE_USER": "${{ secrets.DATABASE_USER }}",
+      #       "DATABASE_PASSWORD": "${{ secrets.DATABASE_PASSWORD }}",
+      #       "DATABASE_DRIVER": "${{ secrets.DATABASE_DRIVER }}",
+      #       "REDIS_HOST": "${{ secrets.REDIS_HOST }}",
+      #       "CADDY_HOST_NAME": "${{ secrets.CADDY_HOST_NAME }}",
+      #       "APP_SECRET": "${{ secrets.APP_SECRET }}"
+      #     }' >> secrets.json
+      #   shell: bash
+
+      # - name: Render the secret with Template File
+      #   run: |
+      #     go install github.com/cbroglie/mustache/cmd/mustache@v1.4.0
+      #     touch ./etc/cfg/conf.json
+      #     mustache --layout ./etc/tpl/conf.template.json secrets.json ./etc/cfg/conf.json >> ./etc/cfg/conf.json
+      #     rm ./deploy/caddy/Caddyfile
+      #     touch ./deploy/caddy/Caddyfile
+      #     mustache --layout ./deploy/caddy/Caddyfile.template secrets.json ./deploy/caddy/Caddyfile >> ./deploy/caddy/Caddyfile
+      #     rm secrets.json
+
+      # - name: Build Go App for Docker
+      #   id: build
+      #   run: |
+      #     make prepare
+      #     make build-alpine
+
+      - name: Get Latest Tag
+        id: latest-tag
+        run: |
+          git config --global --add safe.directory /github/workspace
+          echo "tag=$(git tag -l | grep -v -E '^.*-hotfix\..*$' | sed '/-/!{s/$/_/;}' \
+            | sort -V | sed 's/_$//' | tail -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate New Bumped Version
+        uses: DelosAqua/action-bump-semver@v1.1.0
+        id: bump-semver
+        with:
+          current_version: ${{ steps.latest-tag.outputs.tag }}
+          level: prerelease
+          preid: rc
+
+      - name: Check Semver Format
+        run: ./utils/semver -v ${{ steps.bump-semver.outputs.new_version }}
+      
+      # - name: Build and push Docker image
+      #   id: app-docker-build
+      #   env:
+      #     DOCKER_IMAGE: ${{ env.DOCKERHUB_REPOSITORY }}:${{ steps.bump-semver.outputs.new_version }}
+      #   run: |
+      #     docker buildx create --use
+      #     echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      #     docker buildx build . -f ./utils/Dockerfile -t ${{ env.DOCKER_IMAGE }} -t ${{ env.DOCKERHUB_REPOSITORY }}:latest\
+      #       --build-arg SERVICE_VERSION=${{ steps.bump-semver.outputs.new_version }} \
+      #       --provenance false --push
+      #     echo "docker_image=${{ env.DOCKER_IMAGE }}" >> "$GITHUB_OUTPUT"
+      
+      # - name: Build and push Docker Image for Caddyfile
+      #   id: caddy-docker-build
+      #   env:
+      #     DOCKER_IMAGE: ${{ env.CADDY_DOCKERHUB_REPO }}:${{ steps.bump-semver.outputs.new_version }}
+      #   run: |
+      #     docker buildx create --use
+      #     echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      #     docker buildx build ./deploy/caddy -f ./deploy/caddy/caddy.dockerfile -t ${{ env.DOCKER_IMAGE }} -t ${{ env.CADDY_DOCKERHUB_REPO }}:latest \
+      #       --build-arg SERVICE_VERSION=${{ steps.bump-semver.outputs.new_version }} \
+      #       --provenance false --push
+      #     echo "docker_image=${{ env.DOCKER_IMAGE }}" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release Notes
+        id: create-release
+        run: |
+          curl -f -X POST -H "Accept: application/vnd.github.v3+json" \
+            -H "authorization: Bearer ${{ secrets.TOKEN_GITHUB }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases \
+            -d '{"tag_name":"${{ steps.bump-semver.outputs.new_version }}", "prerelease":true, "generate_release_notes":true}'
+      
+
+      # SSH Action to redeploy
+      # - name: "Deploy Selected Image"
+      #   id: deploy
+      #   uses: appleboy/ssh-action@v1.0.0
+      #   with:
+      #     host: ${{ secrets.VPS_HOST }}
+      #     username: ${{ secrets.VPS_USERNAME }}
+      #     password: ${{ secrets.VPS_PASSWORD }}
+      #     port: ${{ secrets.VPS_PORT }}
+      #     script: |
+      #       cd ${{ secrets.DEPLOY_FILE }}
+      #       echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      #       docker compose down
+      #       docker system prune --volumes -af
+      #       docker compose up -d
+
+
+      # Below is for notification
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v34
+        with:
+          separator: "----------------------"
+      - name: List all changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+        with:
+          length: 7
+      
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_USERNAME: ${{ secrets.DISCORD_USERNAME }}
+          DISCORD_AVATAR: ${{ secrets.DISCORD_AVATAR }}
+          DISCORD_EMBEDS: '[    { 
+            "author": {  "icon_url": "https://avatars.githubusercontent.com/${{ github.actor }}", "name": "${{ github.actor }}", "url": "https://github.com/${{github.actor}}" },
+            "url": "https://github.com/${{github.repository}}/commit/${{github.sha}}",
+            "fields": [
+            { "name": "Repository", "value": "[${{github.event.repository.name}}](${{github.event.repository.clone_url}})", "inline": true },
+            { "name": "Branch", "value": "[${{github.ref_name}}](https://github.com/${{github.repository}}/tree/${{github.ref_name}})", "inline": true },
+            { "name": "Event", "value": "${{github.event_name}}", "inline": true },
+            { "name": "Job", "value": "${{github.job}}", "inline": true },
+            { "name": "Commit Message", "value": "[${{ steps.short-sha.outputs.sha }}](https://github.com/${{github.repository}}/commit/${{github.sha}}) - `${{github.event.head_commit.message}}`" },
+            { "name": "Changed Files", "value": "${{ steps.changed-files.outputs.all_changed_files }}" },
+            { "name": "Author", "value": "[${{github.event.head_commit.author.name}}](https://github.com/${{github.actor}})" }
+            ],
+            "color":1127128,
+            "timestamp": "${{github.event.head_commit.timestamp}}",
+            "footer":{"text": "${{github.event.head_commit.timestamp}}"}
+            }    ]'
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'The project ${{ github.repository }} has been built.'
