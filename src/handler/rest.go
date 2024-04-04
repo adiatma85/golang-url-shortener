@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/adiatma85/golang-url-shortener/src/business/usecase"
 	"github.com/adiatma85/golang-url-shortener/utils/config"
 	"github.com/adiatma85/own-go-sdk/appcontext"
 	"github.com/adiatma85/own-go-sdk/instrument"
@@ -31,21 +32,21 @@ type REST interface {
 }
 
 type rest struct {
-	http *gin.Engine
-	conf config.GinConfig
-	json parser.JSONInterface
-	log  log.Interface
-	// uc         *usecase.Usecase
+	http       *gin.Engine
+	conf       config.GinConfig
+	json       parser.JSONInterface
+	log        log.Interface
+	uc         *usecase.Usecase
 	instrument instrument.Interface
 	jwtAuth    jwtAuth.Interface
 }
 
 type InitParam struct {
-	Http *gin.Engine
-	Conf config.GinConfig
-	Json parser.JSONInterface
-	Log  log.Interface
-	// Uc         *usecase.Usecase
+	Http       *gin.Engine
+	Conf       config.GinConfig
+	Json       parser.JSONInterface
+	Log        log.Interface
+	Uc         *usecase.Usecase
 	Instrument instrument.Interface
 	JwtAuth    jwtAuth.Interface
 }
@@ -66,11 +67,11 @@ func Init(param InitParam) REST {
 		httpServer := gin.New()
 
 		r = &rest{
-			conf: param.Conf,
-			log:  param.Log,
-			json: param.Json,
-			http: httpServer,
-			// uc:         param.Uc,
+			conf:       param.Conf,
+			log:        param.Log,
+			json:       param.Json,
+			http:       httpServer,
+			uc:         param.Uc,
 			instrument: param.Instrument,
 			jwtAuth:    param.JwtAuth,
 		}

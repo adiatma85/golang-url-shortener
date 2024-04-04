@@ -1,8 +1,8 @@
 package main
 
 import (
-	"context"
-
+	"github.com/adiatma85/golang-url-shortener/src/business/domain"
+	"github.com/adiatma85/golang-url-shortener/src/business/usecase"
 	"github.com/adiatma85/golang-url-shortener/src/handler"
 	"github.com/adiatma85/golang-url-shortener/utils/config"
 	"github.com/adiatma85/own-go-sdk/configreader"
@@ -47,12 +47,14 @@ func main() {
 	// Init the jwt
 	jwt := jwtAuth.Init(cfg.JwtAuth)
 
-	log.Info(context.Background(), db)
-	log.Info(context.Background(), parsers)
-	log.Info(context.Background(), jwt)
+	// Init the domain
+	d := domain.Init(domain.InitParam{Log: log, Db: db, Json: parsers.JSONParser()})
+
+	// Init the usecase
+	uc := usecase.Init(usecase.InitParam{Log: log, Dom: d, JwtAuth: jwt})
 
 	// Init the GIN
-	rest := handler.Init(handler.InitParam{Conf: cfg.Gin, Json: parsers.JSONParser(), Log: log, Instrument: instr, JwtAuth: jwt})
+	rest := handler.Init(handler.InitParam{Conf: cfg.Gin, Json: parsers.JSONParser(), Uc: uc, Log: log, Instrument: instr, JwtAuth: jwt})
 
 	rest.Run()
 }
