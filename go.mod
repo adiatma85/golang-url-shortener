@@ -3,11 +3,12 @@ module github.com/adiatma85/golang-url-shortener
 go 1.21
 
 require (
-	github.com/adiatma85/own-go-sdk v0.1.9
+	github.com/adiatma85/own-go-sdk v0.1.11
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/swaggo/swag v1.16.3
+	golang.org/x/crypto v0.21.0
 )
 
 require (
@@ -72,9 +73,8 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect

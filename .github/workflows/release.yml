@@ -107,7 +107,7 @@ jobs:
       # Below is for notification
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v44.3.0
         with:
           separator: "----------------------"
       - name: List all changed files
@@ -135,7 +135,7 @@ jobs:
             { "name": "Job", "value": "${{github.job}}", "inline": true },
             { "name": "Commit Message", "value": "[${{ steps.short-sha.outputs.sha }}](https://github.com/${{github.repository}}/commit/${{github.sha}}) - `${{github.event.head_commit.message}}`" },
             { "name": "Changed Files", "value": "${{ steps.changed-files.outputs.all_changed_files }}" },
-            { "name": "Author", "value": "[${{github.event.head_commit.author.name}}](https://github.com/${{github.actor}})" }
+            { "name": "Author", "value": "[${{github.actor}}](https://github.com/${{github.actor}})" }
             ],
             "color":1127128,
             "timestamp": "${{github.event.head_commit.timestamp}}",
