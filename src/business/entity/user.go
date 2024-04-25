@@ -70,9 +70,10 @@ type UserLoginRequest struct {
 }
 
 type UserLoginResponse struct {
-	Email       string `json:"email"`
-	DisplayName string `json:"displayName"`
-	AccessToken string `json:"accessToken"`
+	Email        string `json:"email"`
+	DisplayName  string `json:"displayName"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 type ChangePasswordRequest struct {
