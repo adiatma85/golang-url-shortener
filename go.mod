@@ -3,11 +3,12 @@ module github.com/adiatma85/golang-url-shortener
 go 1.21
 
 require (
+	github.com/adiatma85/custom-gin-swagger v0.0.3
 	github.com/adiatma85/own-go-sdk v0.1.12
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.9.1
-	github.com/swaggo/gin-swagger v1.6.0
+	github.com/swaggo/files v1.0.1
 	github.com/swaggo/swag v1.16.3
 	golang.org/x/crypto v0.21.0
 )

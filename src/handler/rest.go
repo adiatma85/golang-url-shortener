@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	ginSwagger "github.com/adiatma85/custom-gin-swagger"
+	"github.com/adiatma85/golang-url-shortener/docs/swagger"
 	"github.com/adiatma85/golang-url-shortener/src/business/usecase"
 	"github.com/adiatma85/golang-url-shortener/utils/config"
 	"github.com/adiatma85/own-go-sdk/appcontext"
@@ -23,6 +25,9 @@ import (
 	"github.com/adiatma85/own-go-sdk/parser"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	// Original
+	// ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 const (
@@ -186,58 +191,44 @@ func (r *rest) Run() {
 func (r *rest) Register() {
 	// server health and testing purpose
 	r.http.GET("/ping", r.Ping)
-	// r.registerSwaggerRoutes()
-	// r.registerDummyRoutes()
+	r.registerSwaggerRoutes()
+	r.registerDummyRoutes()
 
-	// // Set Common Middlewares
-	// commonPublicMiddlewares := gin.HandlersChain{
-	// 	r.addFieldsToContext, r.BodyLogger,
-	// }
+	// Set Common Middlewares
+	commonPublicMiddlewares := gin.HandlersChain{
+		r.addFieldsToContext, r.BodyLogger,
+	}
 
-	// commonPrivateMiddlewares := gin.HandlersChain{
-	// 	r.addFieldsToContext, r.BodyLogger,
-	// 	r.VerifyUser,
-	// }
+	commonPrivateMiddlewares := gin.HandlersChain{
+		r.addFieldsToContext, r.BodyLogger,
+		r.VerifyUser,
+	}
 
-	// // public api
-	// publicv1 := r.http.Group("/public/v1/", commonPublicMiddlewares...)
-	// publicv1.POST("/register", r.RegisterNewUserWithoutToken)
+	// public api
+	publicv1 := r.http.Group("/public/v1/", commonPublicMiddlewares...)
+	publicv1.POST("/register", r.RegisterNewUserWithoutToken)
 
-	// // auth api
-	// authv1 := r.http.Group("/auth/v1", commonPublicMiddlewares...)
-	// authv1.POST("/login", r.SignInWithPassword)
-	// authv1.GET("/refresh-token", r.VerifyUser, r.RefreshToken)
+	// auth api
+	authv1 := r.http.Group("/auth/v1", commonPublicMiddlewares...)
+	authv1.POST("/login", r.SignInWithPassword)
+	authv1.GET("/refresh-token", r.VerifyUser, r.RefreshToken)
 
-	// // private api
-	// v1 := r.http.Group("/v1/", commonPrivateMiddlewares...)
+	// private api
+	v1 := r.http.Group("/v1/", commonPrivateMiddlewares...)
 
-	// // user
-	// v1.GET("/user/:user_id", r.GetUserByID)
-	// v1.GET("/user/profile", r.UserProfile)
-	// v1.PUT("/user/profile", r.UpdateUserProfile)
-	// v1.DELETE("/user/profile", r.UserSelfDelete)
-	// v1.PUT("/user/profile/change-password", r.UserChangePassword)
+	// user
+	v1.GET("/user/:user_id", r.GetUserByID)
+	v1.GET("/user/profile", r.UserProfile)
+	v1.PUT("/user/profile", r.UpdateUserProfile)
+	v1.DELETE("/user/profile", r.UserSelfDelete)
+	v1.PUT("/user/profile/change-password", r.UserChangePassword)
 
-	// // user management admin api
-	// v1.GET("/admin/user", r.isAdmin, r.GetListUserAsAdmin)
-	// v1.DELETE("/admin/user/:user_id", r.DeleteUser)
-	// v1.PUT("/admin/user/:user_id", r.isAdmin, r.UpdateUser)
+	// user management admin api
+	v1.GET("/admin/user", r.isAdmin, r.GetListUserAsAdmin)
+	v1.DELETE("/admin/user/:user_id", r.DeleteUser)
+	v1.PUT("/admin/user/:user_id", r.isAdmin, r.UpdateUser)
 
-	// // category
-	// v1.GET("/category", r.GetListCategory)
-	// v1.POST("/category", r.CreateCategory)
-	// v1.GET("/category/:category_id", r.GetCategoryByID)
-	// v1.PUT("/category/:category_id", r.UpdateCategory)
-	// v1.DELETE("/category/:category_id", r.DeleteCategory)
-
-	// // task
-	// v1.GET("/task", r.GetListTask)
-	// v1.POST("/task", r.CreateTask)
-	// v1.GET("/task/:task_id", r.GetTaskById)
-	// v1.PUT("/task/:task_id", r.UpdateTask)
-	// v1.DELETE("/task/:task_id", r.DeleteTask)
-
-	// // role
+	// role
 	// v1.GET("/role", r.isAdmin, r.GetListRole)
 	// v1.POST("/role", r.isAdmin, r.CreateRole)
 	// v1.GET("/role/:role_id", r.isAdmin, r.GetRoleById)
@@ -245,34 +236,34 @@ func (r *rest) Register() {
 	// v1.DELETE("/role/:role_id", r.isAdmin, r.DeleteRole)
 }
 
-// func (r *rest) registerSwaggerRoutes() {
-// 	if r.conf.Swagger.Enabled {
-// 		swagger.SwaggerInfo.Title = r.conf.Meta.Title
-// 		swagger.SwaggerInfo.Description = r.conf.Meta.Description
-// 		swagger.SwaggerInfo.Version = r.conf.Meta.Version
-// 		swagger.SwaggerInfo.Host = r.conf.Meta.Host
-// 		swagger.SwaggerInfo.BasePath = r.conf.Meta.BasePath
+func (r *rest) registerSwaggerRoutes() {
+	if r.conf.Swagger.Enabled {
+		swagger.SwaggerInfo.Title = r.conf.Meta.Title
+		swagger.SwaggerInfo.Description = r.conf.Meta.Description
+		swagger.SwaggerInfo.Version = r.conf.Meta.Version
+		swagger.SwaggerInfo.Host = r.conf.Meta.Host
+		swagger.SwaggerInfo.BasePath = r.conf.Meta.BasePath
 
-// 		swaggerAuth := gin.Accounts{
-// 			r.conf.Swagger.BasicAuth.Username: r.conf.Swagger.BasicAuth.Password,
-// 		}
+		swaggerAuth := gin.Accounts{
+			r.conf.Swagger.BasicAuth.Username: r.conf.Swagger.BasicAuth.Password,
+		}
 
-// 		r.http.GET(fmt.Sprintf("%s/*any", r.conf.Swagger.Path),
-// 			gin.BasicAuthForRealm(swaggerAuth, "Restricted"),
-// 			// ginSwagger.WrapHandler(swaggerfiles.Handler))
-// 	}
-// }
+		r.http.GET(fmt.Sprintf("%s/*any", r.conf.Swagger.Path),
+			gin.BasicAuthForRealm(swaggerAuth, "Restricted"),
+			ginSwagger.WrapHandler(swaggerfiles.Handler))
+	}
+}
 
-// func (r *rest) registerDummyRoutes() {
-// 	if r.conf.Dummy.Enabled {
-// 		// load login page to gin
+func (r *rest) registerDummyRoutes() {
+	if r.conf.Dummy.Enabled {
+		// load login page to gin
 
-// 		r.http.LoadHTMLFiles(
-// 			"./docs/templates/login.html",
-// 		)
+		r.http.LoadHTMLFiles(
+			"./docs/templates/login.html",
+		)
 
-// 		dummyGroup := r.http.Group(r.conf.Dummy.Path)
-// 		fmt.Println(dummyGroup)
-// 		// dummyGroup.GET("/login", r.DummyLogin)
-// 	}
-// }
+		dummyGroup := r.http.Group(r.conf.Dummy.Path)
+		fmt.Println(dummyGroup)
+		dummyGroup.GET("/login", r.DummyLogin)
+	}
+}
