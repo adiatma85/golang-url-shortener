@@ -3,26 +3,36 @@ package handler
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
+	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
+	ginSwagger "github.com/adiatma85/dark-gin-swagger"
+	"github.com/adiatma85/golang-url-shortener/docs/swagger"
 	"github.com/adiatma85/golang-url-shortener/src/business/usecase"
 	"github.com/adiatma85/golang-url-shortener/utils/config"
 	"github.com/adiatma85/own-go-sdk/appcontext"
+	"github.com/adiatma85/own-go-sdk/codes"
+	"github.com/adiatma85/own-go-sdk/errors"
 	"github.com/adiatma85/own-go-sdk/instrument"
 	"github.com/adiatma85/own-go-sdk/jwtAuth"
 	"github.com/adiatma85/own-go-sdk/log"
 	"github.com/adiatma85/own-go-sdk/parser"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	// Original
+	// ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 const (
-// infoRequest  string = `httpclient Sent Request: uri=%v method=%v`
-// infoResponse string = `httpclient Received Response: uri=%v method=%v resp_code=%v`
+	infoRequest  string = `httpclient Sent Request: uri=%v method=%v`
+	infoResponse string = `httpclient Received Response: uri=%v method=%v resp_code=%v`
 )
 
 var once = &sync.Once{}
@@ -96,15 +106,43 @@ func Init(param InitParam) REST {
 		}
 
 		// Set Timeout
-		// r.http.Use(r.SetTimeout)
+		r.http.Use(r.SetTimeout)
 
 		// Set Recovery
-		// r.http.Use(r.CustomRecovery)
+		r.http.Use(r.CustomRecovery)
 
-		// r.Register()
+		r.Register()
 	})
 
 	return r
+}
+
+func (r *rest) CustomRecovery(ctx *gin.Context) {
+	defer func() {
+		if err := recover(); err != nil {
+			// Check for a broken connection, as it is not really a
+			// condition that warrants a panic stack trace.
+			var brokenPipe bool
+			if ne, ok := err.(*net.OpError); ok {
+				if se, ok := ne.Err.(*os.SyscallError); ok { // nolint: errorlint
+					if strings.Contains(strings.ToLower(se.Error()), "broken pipe") || strings.Contains(strings.ToLower(se.Error()), "connection reset by peer") {
+						brokenPipe = true
+					}
+				}
+			}
+			if brokenPipe {
+				// If the connection is dead, we can't write a status to it.
+				ctx.Error(err.(error)) // nolint: errcheck
+				ctx.Abort()
+			} else {
+				r.httpRespError(ctx, errors.NewWithCode(codes.CodeInternalServerError, http.StatusText(http.StatusInternalServerError)))
+			}
+
+			// Need to update SDK First before uncomment this
+			r.log.Panic(err)
+		}
+	}()
+	ctx.Next()
 }
 
 func (r *rest) Run() {
@@ -148,4 +186,85 @@ func (r *rest) Run() {
 		r.log.Fatal(quitctx, fmt.Sprintf("Server Shutdown: %s", err.Error()))
 	}
 	r.log.Info(quitctx, "Server Shut Down.")
+}
+
+func (r *rest) Register() {
+	// server health and testing purpose
+	r.http.GET("/ping", r.Ping)
+	r.registerSwaggerRoutes()
+	r.registerDummyRoutes()
+
+	// Set Common Middlewares
+	commonPublicMiddlewares := gin.HandlersChain{
+		r.addFieldsToContext, r.BodyLogger,
+	}
+
+	commonPrivateMiddlewares := gin.HandlersChain{
+		r.addFieldsToContext, r.BodyLogger,
+		r.VerifyUser,
+	}
+
+	// public api
+	publicv1 := r.http.Group("/public/v1/", commonPublicMiddlewares...)
+	publicv1.POST("/register", r.RegisterNewUserWithoutToken)
+
+	// auth api
+	authv1 := r.http.Group("/auth/v1", commonPublicMiddlewares...)
+	authv1.POST("/login", r.SignInWithPassword)
+	authv1.GET("/refresh-token", r.VerifyUser, r.RefreshToken)
+
+	// private api
+	v1 := r.http.Group("/v1/", commonPrivateMiddlewares...)
+
+	// user
+	v1.GET("/user/:user_id", r.GetUserByID)
+	v1.GET("/user/profile", r.UserProfile)
+	v1.PUT("/user/profile", r.UpdateUserProfile)
+	v1.DELETE("/user/profile", r.UserSelfDelete)
+	v1.PUT("/user/profile/change-password", r.UserChangePassword)
+
+	// user management admin api
+	v1.GET("/admin/user", r.isAdmin, r.GetListUserAsAdmin)
+	v1.DELETE("/admin/user/:user_id", r.DeleteUser)
+	v1.PUT("/admin/user/:user_id", r.isAdmin, r.UpdateUser)
+
+	// role
+	// v1.GET("/role", r.isAdmin, r.GetListRole)
+	// v1.POST("/role", r.isAdmin, r.CreateRole)
+	// v1.GET("/role/:role_id", r.isAdmin, r.GetRoleById)
+	// v1.PUT("/role/:role_id", r.isAdmin, r.UpdateRole)
+	// v1.DELETE("/role/:role_id", r.isAdmin, r.DeleteRole)
+}
+
+func (r *rest) registerSwaggerRoutes() {
+	if r.conf.Swagger.Enabled {
+		swagger.SwaggerInfo.Title = r.conf.Meta.Title
+		swagger.SwaggerInfo.Description = r.conf.Meta.Description
+		swagger.SwaggerInfo.Version = r.conf.Meta.Version
+		swagger.SwaggerInfo.Host = r.conf.Meta.Host
+		swagger.SwaggerInfo.BasePath = r.conf.Meta.BasePath
+
+		swaggerAuth := gin.Accounts{
+			r.conf.Swagger.BasicAuth.Username: r.conf.Swagger.BasicAuth.Password,
+		}
+
+		isDarkMode := ginSwagger.SetDarkMode(r.conf.Swagger.IsDarkMode)
+		r.http.GET(fmt.Sprintf("%s/*any", r.conf.Swagger.Path),
+			gin.BasicAuthForRealm(swaggerAuth, "Restricted"),
+			ginSwagger.WrapHandler(swaggerfiles.Handler, isDarkMode))
+	}
+}
+
+func (r *rest) registerDummyRoutes() {
+	if r.conf.Dummy.Enabled {
+		// load login page to gin
+
+		r.http.LoadHTMLFiles(
+			"./docs/templates/login.html",
+		)
+
+		dummyGroup := r.http.Group(r.conf.Dummy.Path)
+		fmt.Println(dummyGroup)
+		dummyGroup.GET("/login", r.DummyLogin)
+	}
 }

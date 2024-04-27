@@ -8,7 +8,7 @@ import (
 )
 
 type Usecase struct {
-	user user.Interface
+	User user.Interface
 }
 
 type InitParam struct {
@@ -19,7 +19,7 @@ type InitParam struct {
 
 func Init(param InitParam) *Usecase {
 	usecase := &Usecase{
-		user: user.Init(user.InitParam{Log: param.Log, User: param.Dom.User, JwtAuth: param.JwtAuth}),
+		User: user.Init(user.InitParam{Log: param.Log, User: param.Dom.User, JwtAuth: param.JwtAuth}),
 	}
 
 	return usecase

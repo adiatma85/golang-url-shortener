@@ -29,11 +29,11 @@ type Interface interface {
 	SelfDelete(ctx context.Context) error
 	ChangePassword(ctx context.Context, changePasswordReq entity.ChangePasswordRequest) error
 	UpdateUserProfile(ctx context.Context, updateParam entity.UpdateUserParam) error
+	RefreshToken(ctx context.Context) (entity.UserLoginResponse, error)
 
 	// Improvement kedepannya
 	// CheckPassword(ctx context.Context, params entity.UserCheckPasswordParam, userParam entity.UserParam) (entity.HTTPMessage, error)
 	// Activate(ctx context.Context, selectParam entity.UserParam) error
-	// RefreshToken(ctx context.Context, param entity.UserRefreshTokenParam) (entity.RefreshTokenResponse, error)
 }
 
 type InitParam struct {
@@ -208,10 +208,17 @@ func (u *user) SignInWithPassword(ctx context.Context, req entity.UserLoginReque
 		return entity.UserLoginResponse{}, err
 	}
 
+	// Create the JWT Refresh token in here
+	refreshToken, err := u.jwtAuth.CreateRefreshToken(user.ConvertToAuthUser())
+	if err != nil {
+		return entity.UserLoginResponse{}, err
+	}
+
 	result := entity.UserLoginResponse{
-		Email:       user.Email,
-		DisplayName: user.DisplayName,
-		AccessToken: accessToken,
+		Email:        user.Email,
+		DisplayName:  user.DisplayName,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}
 
 	return result, nil
@@ -316,4 +323,34 @@ func (u *user) UpdateUserProfile(ctx context.Context, updateParam entity.UpdateU
 	}
 
 	return u.user.Update(ctx, updateParam, userParam)
+}
+
+func (u *user) RefreshToken(ctx context.Context) (entity.UserLoginResponse, error) {
+	var (
+		result entity.UserLoginResponse
+	)
+
+	jwtUser, err := u.jwtAuth.GetUserAuthInfo(ctx)
+	if err != nil {
+		return result, err
+	}
+
+	// Generate access token in here
+	accessToken, err := u.jwtAuth.CreateAccessToken(jwtUser.User)
+	if err != nil {
+		return result, err
+	}
+
+	// Generate refresh token in here
+	refreshToken, err := u.jwtAuth.CreateRefreshToken(jwtUser.User)
+	if err != nil {
+		return result, err
+	}
+
+	result = entity.UserLoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	return result, nil
 }
