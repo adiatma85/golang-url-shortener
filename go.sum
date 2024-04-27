@@ -44,8 +44,8 @@ github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tN
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
-github.com/adiatma85/custom-gin-swagger v0.0.3 h1:Q42TBEP50TuLvAV+HLE8zhTpCGdqB7tHgAWXUxadLmM=
-github.com/adiatma85/custom-gin-swagger v0.0.3/go.mod h1:55OAC//mjxhuWbHq43UyFnox2+0Ra8hGQ7SiVJEN6TQ=
+github.com/adiatma85/dark-gin-swagger v1.1.0 h1:RJg1i/WzzxI89ZyfpFlbvMo4Pb/v7MPIQEsV6kP4AWI=
+github.com/adiatma85/dark-gin-swagger v1.1.0/go.mod h1:de1iUFnKrpjbRunIVOIJUGOg2ISopWzHhLmYysbvAJM=
 github.com/adiatma85/own-go-sdk v0.1.12 h1:TLoGpGZhY3CMlROMvrpknO5EoDT1t4Z75grs6zNaRE4=
 github.com/adiatma85/own-go-sdk v0.1.12/go.mod h1:o04374NSub2BSVk3tdfAxAlysR2+jOKYZWw50/cHXK0=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=

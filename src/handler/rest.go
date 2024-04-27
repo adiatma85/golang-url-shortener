@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	ginSwagger "github.com/adiatma85/custom-gin-swagger"
+	ginSwagger "github.com/adiatma85/dark-gin-swagger"
 	"github.com/adiatma85/golang-url-shortener/docs/swagger"
 	"github.com/adiatma85/golang-url-shortener/src/business/usecase"
 	"github.com/adiatma85/golang-url-shortener/utils/config"
@@ -248,9 +248,10 @@ func (r *rest) registerSwaggerRoutes() {
 			r.conf.Swagger.BasicAuth.Username: r.conf.Swagger.BasicAuth.Password,
 		}
 
+		isDarkMode := ginSwagger.SetDarkMode(r.conf.Swagger.IsDarkMode)
 		r.http.GET(fmt.Sprintf("%s/*any", r.conf.Swagger.Path),
 			gin.BasicAuthForRealm(swaggerAuth, "Restricted"),
-			ginSwagger.WrapHandler(swaggerfiles.Handler))
+			ginSwagger.WrapHandler(swaggerfiles.Handler, isDarkMode))
 	}
 }
 
