@@ -5,6 +5,10 @@ import (
 	"github.com/adiatma85/own-go-sdk/query"
 )
 
+const (
+	Base62Chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+)
+
 type Url struct {
 	ID          int64       `db:"id" json:"id"`
 	UserId      int64       `db:"fk_user_id" json:"roleId"`
