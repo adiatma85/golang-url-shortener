@@ -269,7 +269,7 @@ func (r *rest) verifyUserAuth(ctx *gin.Context, tokenType string) (entity.User, 
 	case jwtAuth.AccessTokenType:
 		jwtUser, err = r.jwtAuth.ValidateAccessToken(token)
 	case jwtAuth.RefreshTokenType:
-		jwtUser, err = r.jwtAuth.ValidateRefreshTOken(token)
+		jwtUser, err = r.jwtAuth.ValidateRefreshToken(token)
 	}
 
 	if err != nil {
