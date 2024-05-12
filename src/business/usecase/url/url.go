@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/adiatma85/own-go-sdk/codes"
+	"github.com/adiatma85/own-go-sdk/errors"
 	"github.com/adiatma85/own-go-sdk/jwtAuth"
 	"github.com/adiatma85/own-go-sdk/log"
 	"github.com/adiatma85/own-go-sdk/null"
@@ -49,21 +51,32 @@ func Init(params InitParam) Interface {
 }
 
 func (u *url) Create(ctx context.Context, insertParam entity.CreateUrlParam) (entity.Url, error) {
-	var result entity.Url
+	var (
+		result         entity.Url
+		duplicateError error
+	)
 	user, err := u.jwtAuth.GetUserAuthInfo(ctx)
 	if err != nil {
 		return result, err
 	}
 
+	insertParam.UserId = user.User.ID
 	insertParam.CreatedBy = null.StringFrom(fmt.Sprintf("%v", user.User.ID))
 	insertParam.UpdatedBy = null.StringFrom(fmt.Sprintf("%v", user.User.ID))
 
 	// Generate shorten url
-	shortenUrl, err := goNanoId.Generate(entity.Base62Chars, 5)
-	if err != nil {
-		return result, err
+	for {
+		shortenUrl, err := u.generateShortenUrl()
+		if err != nil {
+			return result, err
+		}
+		insertParam.ShortenUrl = shortenUrl
+		duplicateError = u.validateShortenedUrl(ctx, insertParam)
+
+		if duplicateError != nil {
+			break
+		}
 	}
-	insertParam.ShortenUrl = shortenUrl
 
 	result, err = u.url.Create(ctx, insertParam)
 	if err != nil {
@@ -71,6 +84,36 @@ func (u *url) Create(ctx context.Context, insertParam entity.CreateUrlParam) (en
 	}
 
 	return result, nil
+}
+
+func (u *url) validateShortenedUrl(ctx context.Context, urlInsertBody entity.CreateUrlParam) error {
+	urlParam := entity.UrlParam{
+		ShortenUrl: urlInsertBody.ShortenUrl,
+		QueryOption: query.Option{
+			IsActive: true,
+		},
+	}
+
+	existedUrl, err := u.url.Get(ctx, urlParam)
+	if err != nil && errors.GetCode(err) != codes.CodeSQLRecordDoesNotExist {
+		return err
+	}
+
+	// Duplicate shorten url, but different original url
+	if existedUrl.OriginalUrl != urlInsertBody.OriginalUrl {
+		return errors.NewWithCode(codes.CodeConflict, "duplicate shorten url")
+	}
+
+	return nil
+}
+
+func (u *url) generateShortenUrl() (string, error) {
+	shortenUrl, err := goNanoId.Generate(entity.Base62Chars, 5)
+	if err != nil {
+		return "", err
+	}
+
+	return shortenUrl, nil
 }
 
 func (u *url) Get(ctx context.Context, params entity.UrlParam) (entity.Url, error) {

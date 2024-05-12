@@ -11,7 +11,7 @@ const (
 
 type Url struct {
 	ID          int64       `db:"id" json:"id"`
-	UserId      int64       `db:"fk_user_id" json:"roleId"`
+	UserId      int64       `db:"fk_user_id" json:"userId"`
 	OriginalUrl string      `db:"original_url" json:"originalUrl"`
 	ShortenUrl  string      `db:"shorten_url" json:"shorten_url"`
 	Visit       int64       `db:"visit" json:"visit"`
@@ -25,18 +25,18 @@ type Url struct {
 }
 
 type UrlParam struct {
-	ID         null.Int64  `param:"id" db:"id" uri:"url_id" form:"id"`
-	UserId     null.Int64  `param:"fk_user_id" db:"fk_user_id" uri:"user_id" form:"fk_user_id"`
-	ShortenUrl null.String `param:"shorten_url" db:"shorten_url"`
+	ID         null.Int64 `param:"id" db:"id" uri:"url_id" form:"id"`
+	UserId     null.Int64 `param:"fk_user_id" db:"fk_user_id" uri:"user_id" form:"fk_user_id"`
+	ShortenUrl string     `param:"shorten_url" uri:"shorten_url" db:"shorten_url" swaggertype:"string"`
 	PaginationParam
 	QueryOption query.Option
 }
 
 type CreateUrlParam struct {
-	UserId      int64       `db:"fk_user_id" json:"roleId"`
+	UserId      int64       `db:"fk_user_id" json:"-"`
 	OriginalUrl string      `db:"original_url" json:"originalUrl"`
-	ShortenUrl  string      `db:"shorten_url" json:"shorten_url"`
-	Visit       int64       `db:"visit" json:"visit"`
+	ShortenUrl  string      `db:"shorten_url" json:"-"`
+	Visit       int64       `db:"visit" json:"-"`
 	CreatedBy   null.String `json:"-" db:"created_by" swaggertype:"string"`
 	UpdatedBy   null.String `json:"-" db:"updated_by" swaggertype:"string"`
 }

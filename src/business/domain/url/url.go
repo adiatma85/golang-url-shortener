@@ -7,6 +7,7 @@ import (
 	"github.com/adiatma85/own-go-sdk/codes"
 	"github.com/adiatma85/own-go-sdk/errors"
 	"github.com/adiatma85/own-go-sdk/log"
+	"github.com/adiatma85/own-go-sdk/null"
 	"github.com/adiatma85/own-go-sdk/parser"
 	"github.com/adiatma85/own-go-sdk/sql"
 )
@@ -58,7 +59,9 @@ func (u *url) Create(ctx context.Context, insertParam entity.CreateUrlParam) (en
 		return result, errors.NewWithCode(codes.CodeSQLTxCommit, err.Error())
 	}
 
-	return result, nil
+	return u.Get(ctx, entity.UrlParam{
+		ID: null.Int64From(result.ID),
+	})
 }
 
 func (u *url) Get(ctx context.Context, params entity.UrlParam) (entity.Url, error) {

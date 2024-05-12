@@ -2,8 +2,8 @@ package url
 
 const (
 	createUrl = `
-	INSERT INTO role (original_url, shorten_url, user_id, created_by, updated_by)
-	    VALUES (:original_url, :shorten_url, :user_id, :created_by, :updated_by)`
+	INSERT INTO url (original_url, shorten_url, fk_user_id, created_by, updated_by)
+	    VALUES (:original_url, :shorten_url, :fk_user_id, :created_by, :updated_by)`
 
 	getUrl = `
 	SELECT
@@ -11,7 +11,7 @@ const (
 		original_url,
 		shorten_url,
 	    visit,
-	    user_id,
+	    fk_user_id,
 	    status,
 	    created_at,
 	    created_by,
