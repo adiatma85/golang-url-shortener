@@ -11,6 +11,7 @@ require (
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/swag v1.16.3
 	golang.org/x/crypto v0.21.0
+	github.com/matoous/go-nanoid/v2 v2.0.0
 )
 
 require (

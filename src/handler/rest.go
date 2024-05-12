@@ -26,8 +26,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
-	// Original
-	// ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 const (
@@ -216,17 +214,28 @@ func (r *rest) Register() {
 	// private api
 	v1 := r.http.Group("/v1/", commonPrivateMiddlewares...)
 
-	// user
+	// user management admin API
+	v1.GET("/admin/user", r.isAdmin, r.GetListUserAsAdmin)
+	v1.DELETE("/admin/user/:user_id", r.DeleteUser)
+	v1.PUT("/admin/user/:user_id", r.isAdmin, r.UpdateUser)
+
+	// Url management admin API
+	v1.GET("/admin/url", r.isAdmin, r.GetListUrlAdmin)
+
+	// User
 	v1.GET("/user/:user_id", r.GetUserByID)
 	v1.GET("/user/profile", r.UserProfile)
 	v1.PUT("/user/profile", r.UpdateUserProfile)
 	v1.DELETE("/user/profile", r.UserSelfDelete)
 	v1.PUT("/user/profile/change-password", r.UserChangePassword)
 
-	// user management admin api
-	v1.GET("/admin/user", r.isAdmin, r.GetListUserAsAdmin)
-	v1.DELETE("/admin/user/:user_id", r.DeleteUser)
-	v1.PUT("/admin/user/:user_id", r.isAdmin, r.UpdateUser)
+	// Url
+	v1.POST("/url", r.CreateUrl)
+	v1.GET("/url", r.GetListUrl)
+	v1.GET("/url/:url_id", r.GetUrlByID)
+	v1.PUT("/url/:url_id", r.UpdateUrl)
+	v1.DELETE("/url/:url_id", r.DeleteUrl)
+	v1.GET("/shortened-url/:shorten_url", r.GetByShortenedUrl)
 
 	// role
 	// v1.GET("/role", r.isAdmin, r.GetListRole)

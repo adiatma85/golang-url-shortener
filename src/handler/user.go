@@ -133,8 +133,8 @@ func (r *rest) UserProfile(ctx *gin.Context) {
 	r.httpRespSuccess(ctx, codes.CodeSuccess, userProfile, nil)
 }
 
-// @Summary Self Delete for User
-// @Description Self Delete for User
+// @Summary Update User Profile
+// @Description Update User Profile
 // @Security BearerAuth
 // @Tags User
 // @Produce json

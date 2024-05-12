@@ -24,10 +24,10 @@ CREATE TABLE IF NOT EXISTS `user` (
 DROP TABLE IF EXISTS `url`;
 CREATE TABLE IF NOT EXISTS `url` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `fk_user_id` INT NOT NULL,
   `original_url` VARCHAR(255) NOT NULL DEFAULT '',
   `shorten_url` VARCHAR(255) NOT NULL DEFAULT '',
   `visit` INT NOT NULL DEFAULT 0,
-  `user_id` INT NOT NULL,
 
   -- Utility columns
   `status` SMALLINT NOT NULL DEFAULT '1',
