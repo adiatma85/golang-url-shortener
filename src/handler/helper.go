@@ -220,7 +220,7 @@ func (r *rest) BodyLogger(ctx *gin.Context) {
 }
 
 func (r *rest) VerifyUser(ctx *gin.Context) {
-	user, err := r.verifyUserAuth(ctx)
+	user, err := r.verifyUserAuth(ctx, jwtAuth.AccessTokenType)
 	if err != nil {
 		r.httpRespError(ctx, err)
 		return
@@ -236,9 +236,28 @@ func (r *rest) VerifyUser(ctx *gin.Context) {
 	ctx.Next()
 }
 
-func (r *rest) verifyUserAuth(ctx *gin.Context) (entity.User, error) {
+func (r *rest) VerifyRefreshToken(ctx *gin.Context) {
+	user, err := r.verifyUserAuth(ctx, jwtAuth.RefreshTokenType)
+	if err != nil {
+		r.httpRespError(ctx, err)
+		return
+	}
+
+	c := ctx.Request.Context()
+	c = r.jwtAuth.SetUserAuthInfo(c, jwtAuth.UserAuthParam{
+		User: user.ConvertToAuthUser(),
+	})
+	c = appcontext.SetUserId(c, int(user.ID))
+	ctx.Request = ctx.Request.WithContext(c)
+
+	ctx.Next()
+}
+
+func (r *rest) verifyUserAuth(ctx *gin.Context, tokenType string) (entity.User, error) {
 	var (
-		user entity.User
+		user    entity.User
+		jwtUser jwtAuth.User
+		err     error
 	)
 
 	token := ctx.Request.Header.Get(header.KeyAuthorization)
@@ -246,13 +265,19 @@ func (r *rest) verifyUserAuth(ctx *gin.Context) (entity.User, error) {
 		return entity.User{}, errors.NewWithCode(codes.CodeUnauthorized, "empty token")
 	}
 
-	jwtUer, err := r.jwtAuth.ValidateToken(token)
+	switch tokenType {
+	case jwtAuth.AccessTokenType:
+		jwtUser, err = r.jwtAuth.ValidateAccessToken(token)
+	case jwtAuth.RefreshTokenType:
+		jwtUser, err = r.jwtAuth.ValidateRefreshToken(token)
+	}
+
 	if err != nil {
 		return entity.User{}, errors.NewWithCode(codes.CodeUnauthorized, "token invalid or token expire")
 	}
 
 	user, err = r.uc.User.Get(ctx.Request.Context(), entity.UserParam{
-		ID: null.Int64From(jwtUer.ID),
+		ID: null.Int64From(jwtUser.ID),
 		QueryOption: query.Option{
 			IsActive: true,
 		},
@@ -265,7 +290,7 @@ func (r *rest) verifyUserAuth(ctx *gin.Context) (entity.User, error) {
 }
 
 func (r *rest) isAdmin(ctx *gin.Context) {
-	user, err := r.verifyUserAuth(ctx)
+	user, err := r.verifyUserAuth(ctx, jwtAuth.AccessTokenType)
 	if err != nil {
 		r.httpRespError(ctx, err)
 		return
