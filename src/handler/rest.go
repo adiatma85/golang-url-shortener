@@ -209,7 +209,7 @@ func (r *rest) Register() {
 	// auth api
 	authv1 := r.http.Group("/auth/v1", commonPublicMiddlewares...)
 	authv1.POST("/login", r.SignInWithPassword)
-	authv1.GET("/refresh-token", r.VerifyUser, r.RefreshToken)
+	authv1.GET("/refresh-token", r.VerifyRefreshToken, r.RefreshToken)
 
 	// private api
 	v1 := r.http.Group("/v1/", commonPrivateMiddlewares...)
