@@ -2,8 +2,8 @@ package user
 
 const (
 	createUser = `
-	INSERT INTO user (fk_role_id, email, username, password, display_name, created_by, updated_by)
-	    VALUES (:fk_role_id, :email, :username, :password, :display_name, :created_by, :updated_by)`
+	INSERT INTO user (fk_role_id, email, username, password, display_name, created_by)
+	    VALUES (:fk_role_id, :email, :username, :password, :display_name, :created_by)`
 
 	getUser = `
 	SELECT
