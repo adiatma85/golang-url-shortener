@@ -225,7 +225,7 @@ func (r *rest) Register() {
 	// User
 	v1.GET("/user/:user_id", r.GetUserByID)
 	v1.GET("/user/profile", r.UserProfile)
-	v1.PUT("/user/profile", r.UpdateUserProfile)
+	v1.PUT("/user/profile", r.UpdateUserSelfProfile)
 	v1.DELETE("/user/profile", r.UserSelfDelete)
 	v1.PUT("/user/profile/change-password", r.UserChangePassword)
 

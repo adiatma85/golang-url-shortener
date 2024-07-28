@@ -142,7 +142,7 @@ func (r *rest) UserProfile(ctx *gin.Context) {
 // @Param user_change_profile body entity.UpdateUserParam true "user change profile data"
 // @Failure 500 {object} entity.HTTPResp{}
 // @Router /v1/user/profile [PUT]
-func (r *rest) UpdateUserProfile(ctx *gin.Context) {
+func (r *rest) UpdateUserSelfProfile(ctx *gin.Context) {
 	updateParam := entity.UpdateUserParam{}
 
 	if err := r.Bind(ctx, &updateParam); err != nil {
@@ -150,7 +150,7 @@ func (r *rest) UpdateUserProfile(ctx *gin.Context) {
 		return
 	}
 
-	err := r.uc.User.UpdateUserProfile(ctx.Request.Context(), updateParam)
+	err := r.uc.User.UpdateUserSelfProfile(ctx.Request.Context(), updateParam)
 	if err != nil {
 		r.httpRespError(ctx, err)
 		return

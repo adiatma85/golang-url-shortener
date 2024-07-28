@@ -253,6 +253,7 @@ func (r *rest) VerifyRefreshToken(ctx *gin.Context) {
 	ctx.Next()
 }
 
+// Function ini nantinya bisa jadi referensi di projek sebelah
 func (r *rest) verifyUserAuth(ctx *gin.Context, tokenType string) (entity.User, error) {
 	var (
 		user    entity.User
