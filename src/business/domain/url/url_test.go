@@ -1,4 +1,4 @@
-package user
+package url
 
 import (
 	"context"
@@ -20,11 +20,10 @@ import (
 	mock_log "github.com/adiatma85/own-go-sdk/tests/mock/log"
 	mock_json "github.com/adiatma85/own-go-sdk/tests/mock/parser"
 	"github.com/stretchr/testify/assert"
-
 	"go.uber.org/mock/gomock"
 )
 
-func Test_user_Create(t *testing.T) {
+func Test_url_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -35,31 +34,28 @@ func Test_user_Create(t *testing.T) {
 
 	mockJsonParser := mock_json.NewMockJSONInterface(ctrl)
 
-	query := regexp.QuoteMeta(`INSERT INTO user (fk_role_id, email, username, password, display_name, created_by) VALUES (?, ?, ?, ?, ?, ?)`)
-	queryGet := regexp.QuoteMeta(readUser)
-
 	// Type in here
 	type args struct {
 		ctx         context.Context
-		createParam entity.CreateUserParam
+		createParam entity.CreateUrlParam
 	}
 
 	// Mock in here
-	mockCreateParam := entity.CreateUserParam{
-		RoleId:          1,
-		Username:        "Ramdani Koernia",
-		Email:           "random@gmail.com",
-		Password:        "strongPassword",
-		ConfirmPassword: "strongPassword",
-		DisplayName:     "Display Name",
+	mockCreateParam := entity.CreateUrlParam{
+		ShortenUrl:  "Shortened Url",
+		OriginalUrl: "Original Url",
 	}
+
+	query := regexp.QuoteMeta(`INSERT INTO url (original_url, shorten_url, fk_user_id, created_by, updated_by)
+	VALUES (?, ?, ?, ?, ?)`)
+	queryGet := regexp.QuoteMeta(readUrl)
 
 	// Test cases in here
 	tests := []struct {
 		name        string
 		args        args
 		prepSqlMock func() (*sql.DB, error)
-		want        entity.User
+		want        entity.Url
 		wantErr     bool
 	}{
 		{
@@ -72,11 +68,11 @@ func Test_user_Create(t *testing.T) {
 				sqlServer, _, err := sqlmock.New()
 				return sqlServer, err
 			},
-			want:    entity.User{},
+			want:    entity.Url{},
 			wantErr: true,
 		},
 		{
-			name: "cannot exec user",
+			name: "cannot exec url",
 			args: args{
 				ctx:         context.Background(),
 				createParam: mockCreateParam,
@@ -85,16 +81,16 @@ func Test_user_Create(t *testing.T) {
 				sqlServer, sqlMock, err := sqlmock.New()
 				sqlMock.ExpectBegin()
 
-				sqlMock.ExpectExec(query).WillReturnError(errors.NewWithCode(codes.CodeSQL, "cannot create user"))
+				sqlMock.ExpectExec(query).WillReturnError(errors.NewWithCode(codes.CodeSQL, "cannot create url"))
 				sqlMock.ExpectRollback()
 
 				return sqlServer, err
 			},
-			want:    entity.User{},
+			want:    entity.Url{},
 			wantErr: true,
 		},
 		{
-			name: "user no new row",
+			name: "url no new row",
 			args: args{
 				ctx:         context.Background(),
 				createParam: mockCreateParam,
@@ -106,7 +102,7 @@ func Test_user_Create(t *testing.T) {
 				sqlMock.ExpectRollback()
 				return sqlServer, err
 			},
-			want:    entity.User{},
+			want:    entity.Url{},
 			wantErr: true,
 		},
 		{
@@ -123,7 +119,7 @@ func Test_user_Create(t *testing.T) {
 				sqlMock.ExpectRollback()
 				return sqlServer, err
 			},
-			want: entity.User{
+			want: entity.Url{
 				ID: 1,
 			},
 			wantErr: true,
@@ -143,25 +139,25 @@ func Test_user_Create(t *testing.T) {
 				// Add new rows
 				row := sqlMock.NewRows([]string{
 					"id",
-					"username",
-					"email",
+					"original_url",
+					"shorten_url",
 				})
-				row.AddRow("1", "Ramdani Koernia", "random@gmail.com")
+				row.AddRow("1", "Original Url", "Shortened Url")
 				sqlMock.ExpectQuery(queryGet).WithArgs(1).WillReturnRows(row)
 
 				sqlMock.ExpectRollback()
 				return sqlServer, err
 			},
-			want: entity.User{
-				ID:       1,
-				Username: "Ramdani Koernia",
-				Email:    "random@gmail.com",
+			want: entity.Url{
+				ID:          1,
+				ShortenUrl:  "Shortened Url",
+				OriginalUrl: "Original Url",
 			},
 			wantErr: false,
 		},
 	}
 
-	// Iterate the tests in here
+	// Iterate the test in here
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sqlServer, err := tt.prepSqlMock()
@@ -199,7 +195,7 @@ func Test_user_Create(t *testing.T) {
 	}
 }
 
-func Test_user_Get(t *testing.T) {
+func Test_url_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -213,18 +209,18 @@ func Test_user_Get(t *testing.T) {
 	// Type in here
 	type args struct {
 		ctx    context.Context
-		params entity.UserParam
+		params entity.UrlParam
 	}
 
 	// Mock in here
 	now := time.Now()
-	query := regexp.QuoteMeta(readUser)
+	query := regexp.QuoteMeta(readUrl)
 
-	mockParam := entity.UserParam{
+	mockParam := entity.UrlParam{
 		ID: null.Int64From(1),
 	}
 
-	sampleUser := entity.User{
+	sampleResult := entity.Url{
 		ID:        1,
 		CreatedAt: null.TimeFrom(now),
 		CreatedBy: null.StringFrom("test"),
@@ -237,7 +233,7 @@ func Test_user_Get(t *testing.T) {
 		name        string
 		args        args
 		prepSqlMock func() (*sql.DB, error)
-		want        entity.User
+		want        entity.Url
 		wantErr     bool
 	}{
 		{
@@ -253,7 +249,7 @@ func Test_user_Get(t *testing.T) {
 				return sqlServer, err
 			},
 			wantErr: true,
-			want:    entity.User{},
+			want:    entity.Url{},
 		},
 		{
 			name: "error struct scan",
@@ -271,7 +267,7 @@ func Test_user_Get(t *testing.T) {
 				return sqlServer, err
 			},
 			wantErr: true,
-			want:    entity.User{},
+			want:    entity.Url{},
 		},
 		{
 			name: "all good",
@@ -288,7 +284,7 @@ func Test_user_Get(t *testing.T) {
 				return sqlServer, err
 			},
 			wantErr: false,
-			want:    sampleUser,
+			want:    sampleResult,
 		},
 	}
 
@@ -330,7 +326,7 @@ func Test_user_Get(t *testing.T) {
 	}
 }
 
-func Test_user_GetList(t *testing.T) {
+func Test_url_GetList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -344,17 +340,17 @@ func Test_user_GetList(t *testing.T) {
 	// Type in here
 	type args struct {
 		ctx    context.Context
-		params entity.UserParam
+		params entity.UrlParam
 	}
 
 	// Mock in here
 	now := time.Now()
 	queryExt := " WHERE 1=1 AND id=? LIMIT 0, 10;"
-	query := regexp.QuoteMeta(readUser + queryExt)
+	query := regexp.QuoteMeta(readUrl + queryExt)
 	queryCountExt := " WHERE 1=1 AND id=?;"
-	queryCount := regexp.QuoteMeta(readUserCount + queryCountExt)
+	queryCount := regexp.QuoteMeta(readUrlCount + queryCountExt)
 
-	mockUserParam := entity.UserParam{
+	mockParams := entity.UrlParam{
 		ID: null.Int64From(1),
 		PaginationParam: entity.PaginationParam{
 			IncludePagination: true,
@@ -374,7 +370,7 @@ func Test_user_GetList(t *testing.T) {
 		name        string
 		args        args
 		prepSqlMock func() (*sql.DB, error)
-		want        []entity.User
+		want        []entity.Url
 		want1       *entity.Pagination
 		wantErr     bool
 	}{
@@ -382,14 +378,14 @@ func Test_user_GetList(t *testing.T) {
 			name: "error when query-ing",
 			args: args{
 				ctx:    context.Background(),
-				params: mockUserParam,
+				params: mockParams,
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
-				sqlMock.ExpectQuery(query).WillReturnError(fmt.Errorf("failed to get list of user"))
+				sqlMock.ExpectQuery(query).WillReturnError(fmt.Errorf("failed to get list of url"))
 				return sqlServer, err
 			},
-			want:    []entity.User{},
+			want:    []entity.Url{},
 			want1:   nil,
 			wantErr: true,
 		},
@@ -397,7 +393,7 @@ func Test_user_GetList(t *testing.T) {
 			name: "error when struct scan",
 			args: args{
 				ctx:    context.Background(),
-				params: mockUserParam,
+				params: mockParams,
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
@@ -410,7 +406,7 @@ func Test_user_GetList(t *testing.T) {
 				sqlMock.ExpectQuery(queryCount).WillReturnRows(rowCount)
 				return sqlServer, err
 			},
-			want:    []entity.User{},
+			want:    []entity.Url{},
 			want1:   nil,
 			wantErr: true,
 		},
@@ -418,7 +414,7 @@ func Test_user_GetList(t *testing.T) {
 			name: "all good",
 			args: args{
 				ctx:    context.Background(),
-				params: mockUserParam,
+				params: mockParams,
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
@@ -431,7 +427,7 @@ func Test_user_GetList(t *testing.T) {
 				sqlMock.ExpectQuery(queryCount).WillReturnRows(rowCount)
 				return sqlServer, err
 			},
-			want: []entity.User{
+			want: []entity.Url{
 				{
 					ID:        1,
 					CreatedAt: null.TimeFrom(now),
@@ -487,7 +483,7 @@ func Test_user_GetList(t *testing.T) {
 	}
 }
 
-func Test_user_Update(t *testing.T) {
+func Test_url_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -501,24 +497,23 @@ func Test_user_Update(t *testing.T) {
 	// Type in here
 	type args struct {
 		ctx         context.Context
-		updateParam entity.UpdateUserParam
-		selectParam entity.UserParam
+		updateParam entity.UpdateUrlParam
+		selectParam entity.UrlParam
 	}
 
 	// Mock in here
-	queryUpdate := regexp.QuoteMeta("UPDATE user SET username=?, display_name=?, updated_by=? WHERE 1=1 AND status=1 AND id=?")
+	queryUpdate := regexp.QuoteMeta("UPDATE url SET visit=?, updated_by=? WHERE 1=1 AND status=1 AND id=?")
 
-	selectParamSample := entity.UserParam{
+	selectParamSample := entity.UrlParam{
 		ID: null.Int64From(1),
 		QueryOption: query.Option{
 			IsActive: true,
 		},
 	}
 
-	updateParamSample := entity.UpdateUserParam{
-		Username:    "username",
-		DisplayName: "display name",
-		UpdatedBy:   null.StringFrom("1"),
+	updateParamSample := entity.UpdateUrlParam{
+		Visit:     1,
+		UpdatedBy: null.StringFrom("1"),
 	}
 
 	// Test cases in here
@@ -543,7 +538,7 @@ func Test_user_Update(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "no user updated",
+			name: "no url updated",
 			args: args{
 				ctx:         context.Background(),
 				updateParam: updateParamSample,
@@ -557,7 +552,7 @@ func Test_user_Update(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "update user 0 rows affected",
+			name: "update url 0 rows affected",
 			args: args{
 				ctx:         context.Background(),
 				updateParam: updateParamSample,
@@ -571,7 +566,7 @@ func Test_user_Update(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "update user success",
+			name: "update url success",
 			args: args{
 				ctx:         context.Background(),
 				updateParam: updateParamSample,

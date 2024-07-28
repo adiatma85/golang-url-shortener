@@ -5,7 +5,7 @@ const (
 	INSERT INTO user (fk_role_id, email, username, password, display_name, created_by)
 	    VALUES (:fk_role_id, :email, :username, :password, :display_name, :created_by)`
 
-	getUser = `
+	readUser = `
 	SELECT
 	    id,
 		fk_role_id,

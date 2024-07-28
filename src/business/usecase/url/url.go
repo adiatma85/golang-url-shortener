@@ -21,7 +21,7 @@ type Interface interface {
 	Create(ctx context.Context, insertParam entity.CreateUrlParam) (entity.Url, error)
 	Get(ctx context.Context, urlParam entity.UrlParam) (entity.Url, error)
 	GetList(ctx context.Context, urlParam entity.UrlParam) ([]entity.Url, *entity.Pagination, error)
-	GetListAdmin(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error)
+	GetListAsAdmin(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error)
 	Update(ctx context.Context, updateParam entity.UpdateUrlParam, selectParam entity.UrlParam) error
 	Delete(ctx context.Context, selectParam entity.UrlParam) error
 }
@@ -50,6 +50,7 @@ func Init(params InitParam) Interface {
 	return u
 }
 
+// Create with the injection of user id
 func (u *url) Create(ctx context.Context, insertParam entity.CreateUrlParam) (entity.Url, error) {
 	var (
 		result         entity.Url
@@ -133,7 +134,7 @@ func (u *url) GetList(ctx context.Context, params entity.UrlParam) ([]entity.Url
 	return u.url.GetList(ctx, params)
 }
 
-func (u *url) GetListAdmin(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error) {
+func (u *url) GetListAsAdmin(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error) {
 	params.IncludePagination = true
 
 	return u.url.GetList(ctx, params)

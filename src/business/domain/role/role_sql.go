@@ -1,4 +1,4 @@
-package url
+package role
 
 import (
 	"context"
@@ -11,39 +11,39 @@ import (
 	"github.com/adiatma85/own-go-sdk/sql"
 )
 
-func (u *url) createSQLUrl(tx sql.CommandTx, v entity.CreateUrlParam) (sql.CommandTx, entity.Url, error) {
-	result := entity.Url{}
+func (r *role) createSQLRole(tx sql.CommandTx, v entity.CreateRoleParam) (sql.CommandTx, entity.Role, error) {
+	role := entity.Role{}
 
-	res, err := tx.NamedExec("iCreateUrl", createUrl, v)
+	res, err := tx.NamedExec("iCreateRole", createRole, v)
 	if err != nil {
-		return tx, result, errors.NewWithCode(codes.CodeSQLTxExec, err.Error())
+		return tx, role, errors.NewWithCode(codes.CodeSQLTxExec, err.Error())
 	}
 
 	rowCount, err := res.RowsAffected()
 	if err != nil || rowCount < 1 {
-		return tx, result, errors.NewWithCode(codes.CodeSQLNoRowsAffected, "no rows affected")
+		return tx, role, errors.NewWithCode(codes.CodeSQLNoRowsAffected, "no rows affected")
 	}
 
 	lastID, err := res.LastInsertId()
 	if err != nil {
-		return tx, result, errors.NewWithCode(codes.CodeSQLNoRowsAffected, err.Error())
+		return tx, role, errors.NewWithCode(codes.CodeSQLNoRowsAffected, err.Error())
 	}
 
-	result.ID = lastID
+	role.ID = lastID
 
-	return tx, result, nil
+	return tx, role, nil
 }
 
-func (u *url) getSQLUrl(ctx context.Context, params entity.UrlParam) (entity.Url, error) {
-	result := entity.Url{}
+func (r *role) getSQLRole(ctx context.Context, params entity.RoleParam) (entity.Role, error) {
+	result := entity.Role{}
 
-	qb := query.NewSQLQueryBuilder(u.db, "param", "db", &params.QueryOption)
+	qb := query.NewSQLQueryBuilder(r.db, "param", "db", &params.QueryOption)
 	queryExt, queryArgs, _, _, err := qb.Build(&params)
 	if err != nil {
 		return result, errors.NewWithCode(codes.CodeSQLBuilder, err.Error())
 	}
 
-	row, err := u.db.Follower().QueryRow(ctx, "rUrlByID", readUrl+queryExt, queryArgs...)
+	row, err := r.db.Follower().QueryRow(ctx, "rRoleByID", readRole+queryExt, queryArgs...)
 	if err != nil && !errors.Is(err, sql.ErrNotFound) {
 		return result, errors.NewWithCode(codes.CodeSQLRead, err.Error())
 	} else if errors.Is(err, sql.ErrNotFound) {
@@ -59,16 +59,16 @@ func (u *url) getSQLUrl(ctx context.Context, params entity.UrlParam) (entity.Url
 	return result, nil
 }
 
-func (u *url) getSQLUrlList(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error) {
-	results := []entity.Url{}
+func (r *role) getSQLRoleList(ctx context.Context, params entity.RoleParam) ([]entity.Role, *entity.Pagination, error) {
+	results := []entity.Role{}
 
-	qb := query.NewSQLQueryBuilder(u.db, "param", "db", &params.QueryOption)
+	qb := query.NewSQLQueryBuilder(r.db, "param", "db", &params.QueryOption)
 	queryExt, queryArgs, countExt, countArgs, err := qb.Build(&params)
 	if err != nil {
 		return results, nil, errors.NewWithCode(codes.CodeSQLBuilder, err.Error())
 	}
 
-	rows, err := u.db.Follower().Query(ctx, "rListUrl", readUrl+queryExt, queryArgs...)
+	rows, err := r.db.Follower().Query(ctx, "rListRole", readRole+queryExt, queryArgs...)
 	if err != nil && !errors.Is(err, sql.ErrNotFound) {
 		return results, nil, errors.NewWithCode(codes.CodeSQLRead, err.Error())
 	}
@@ -76,9 +76,9 @@ func (u *url) getSQLUrlList(ctx context.Context, params entity.UrlParam) ([]enti
 	defer rows.Close()
 
 	for rows.Next() {
-		temp := entity.Url{}
+		temp := entity.Role{}
 		if err := rows.StructScan(&temp); err != nil {
-			u.log.Error(ctx, errors.NewWithCode(codes.CodeSQLRowScan, err.Error()))
+			r.log.Error(ctx, errors.NewWithCode(codes.CodeSQLRowScan, err.Error()))
 			// Need discussiion, ini jadinya mau bagaimana
 			return results, nil, err
 		}
@@ -91,7 +91,7 @@ func (u *url) getSQLUrlList(ctx context.Context, params entity.UrlParam) ([]enti
 	}
 
 	if len(results) > 0 && !params.QueryOption.DisableLimit && params.IncludePagination {
-		if err := u.db.Follower().Get(ctx, "cUrl", readUrlCount+countExt, &pg.TotalElements, countArgs...); err != nil {
+		if err := r.db.Follower().Get(ctx, "cRole", readRoleCount+countExt, &pg.TotalElements, countArgs...); err != nil {
 			return results, nil, errors.NewWithCode(codes.CodeSQLRead, err.Error())
 		}
 	}
@@ -101,10 +101,10 @@ func (u *url) getSQLUrlList(ctx context.Context, params entity.UrlParam) ([]enti
 	return results, &pg, nil
 }
 
-func (u *url) updateSQLUrl(ctx context.Context, updateParam entity.UpdateUrlParam, selectParam entity.UrlParam) error {
-	u.log.Debug(ctx, fmt.Sprintf("update url data entry by: %v", selectParam))
+func (r *role) updateSQLRole(ctx context.Context, updateParam entity.UpdateRoleParam, selectParam entity.RoleParam) error {
+	r.log.Debug(ctx, fmt.Sprintf("update role by: %v", selectParam))
 
-	qb := query.NewSQLQueryBuilder(u.db, "param", "db", &selectParam.QueryOption)
+	qb := query.NewSQLQueryBuilder(r.db, "param", "db", &selectParam.QueryOption)
 
 	var err error
 	queryUpdate, args, err := qb.BuildUpdate(&updateParam, &selectParam)
@@ -112,7 +112,7 @@ func (u *url) updateSQLUrl(ctx context.Context, updateParam entity.UpdateUrlPara
 		return errors.NewWithCode(codes.CodeSQLBuilder, err.Error())
 	}
 
-	res, err := u.db.Leader().Exec(ctx, "uProfile", updateUrl+queryUpdate, args...)
+	res, err := r.db.Leader().Exec(ctx, "uRole", updateRole+queryUpdate, args...)
 	if err != nil {
 		return errors.NewWithCode(codes.CodeSQLTxExec, err.Error())
 	}
@@ -122,7 +122,7 @@ func (u *url) updateSQLUrl(ctx context.Context, updateParam entity.UpdateUrlPara
 		return errors.NewWithCode(codes.CodeSQLNoRowsAffected, "no rows affected")
 	}
 
-	u.log.Debug(ctx, fmt.Sprintf("successfully updated url: %v", updateParam))
+	r.log.Debug(ctx, fmt.Sprintf("successfully updated role: %v", updateParam))
 
 	return nil
 }

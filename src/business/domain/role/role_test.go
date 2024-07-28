@@ -1,4 +1,4 @@
-package user
+package role
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func Test_user_Create(t *testing.T) {
+func Test_role_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -35,31 +35,27 @@ func Test_user_Create(t *testing.T) {
 
 	mockJsonParser := mock_json.NewMockJSONInterface(ctrl)
 
-	query := regexp.QuoteMeta(`INSERT INTO user (fk_role_id, email, username, password, display_name, created_by) VALUES (?, ?, ?, ?, ?, ?)`)
-	queryGet := regexp.QuoteMeta(readUser)
-
 	// Type in here
 	type args struct {
 		ctx         context.Context
-		createParam entity.CreateUserParam
+		createParam entity.CreateRoleParam
 	}
 
 	// Mock in here
-	mockCreateParam := entity.CreateUserParam{
-		RoleId:          1,
-		Username:        "Ramdani Koernia",
-		Email:           "random@gmail.com",
-		Password:        "strongPassword",
-		ConfirmPassword: "strongPassword",
-		DisplayName:     "Display Name",
+	mockCreateParam := entity.CreateRoleParam{
+		Name: "Nama Role yang panjang dan lebar",
 	}
+
+	query := regexp.QuoteMeta(`INSERT INTO role (name, type, rank, created_by, updated_by)
+	VALUES (?, ?, ?, ?, ?)`)
+	queryGet := regexp.QuoteMeta(readRole)
 
 	// Test cases in here
 	tests := []struct {
 		name        string
 		args        args
 		prepSqlMock func() (*sql.DB, error)
-		want        entity.User
+		want        entity.Role
 		wantErr     bool
 	}{
 		{
@@ -72,11 +68,11 @@ func Test_user_Create(t *testing.T) {
 				sqlServer, _, err := sqlmock.New()
 				return sqlServer, err
 			},
-			want:    entity.User{},
+			want:    entity.Role{},
 			wantErr: true,
 		},
 		{
-			name: "cannot exec user",
+			name: "cannot exec role",
 			args: args{
 				ctx:         context.Background(),
 				createParam: mockCreateParam,
@@ -85,16 +81,16 @@ func Test_user_Create(t *testing.T) {
 				sqlServer, sqlMock, err := sqlmock.New()
 				sqlMock.ExpectBegin()
 
-				sqlMock.ExpectExec(query).WillReturnError(errors.NewWithCode(codes.CodeSQL, "cannot create user"))
+				sqlMock.ExpectExec(query).WillReturnError(errors.NewWithCode(codes.CodeSQL, "cannot create role"))
 				sqlMock.ExpectRollback()
 
 				return sqlServer, err
 			},
-			want:    entity.User{},
+			want:    entity.Role{},
 			wantErr: true,
 		},
 		{
-			name: "user no new row",
+			name: "role no new row",
 			args: args{
 				ctx:         context.Background(),
 				createParam: mockCreateParam,
@@ -106,7 +102,7 @@ func Test_user_Create(t *testing.T) {
 				sqlMock.ExpectRollback()
 				return sqlServer, err
 			},
-			want:    entity.User{},
+			want:    entity.Role{},
 			wantErr: true,
 		},
 		{
@@ -123,7 +119,7 @@ func Test_user_Create(t *testing.T) {
 				sqlMock.ExpectRollback()
 				return sqlServer, err
 			},
-			want: entity.User{
+			want: entity.Role{
 				ID: 1,
 			},
 			wantErr: true,
@@ -143,25 +139,23 @@ func Test_user_Create(t *testing.T) {
 				// Add new rows
 				row := sqlMock.NewRows([]string{
 					"id",
-					"username",
-					"email",
+					"name",
 				})
-				row.AddRow("1", "Ramdani Koernia", "random@gmail.com")
+				row.AddRow("1", "Nama Role yang panjang dan lebar")
 				sqlMock.ExpectQuery(queryGet).WithArgs(1).WillReturnRows(row)
 
 				sqlMock.ExpectRollback()
 				return sqlServer, err
 			},
-			want: entity.User{
-				ID:       1,
-				Username: "Ramdani Koernia",
-				Email:    "random@gmail.com",
+			want: entity.Role{
+				ID:   1,
+				Name: "Nama Role yang panjang dan lebar",
 			},
 			wantErr: false,
 		},
 	}
 
-	// Iterate the tests in here
+	// Iterate the test in here
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sqlServer, err := tt.prepSqlMock()
@@ -199,7 +193,7 @@ func Test_user_Create(t *testing.T) {
 	}
 }
 
-func Test_user_Get(t *testing.T) {
+func Test_role_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -213,18 +207,18 @@ func Test_user_Get(t *testing.T) {
 	// Type in here
 	type args struct {
 		ctx    context.Context
-		params entity.UserParam
+		params entity.RoleParam
 	}
 
 	// Mock in here
 	now := time.Now()
-	query := regexp.QuoteMeta(readUser)
+	query := regexp.QuoteMeta(readRole)
 
-	mockParam := entity.UserParam{
+	mockParam := entity.RoleParam{
 		ID: null.Int64From(1),
 	}
 
-	sampleUser := entity.User{
+	sampleResult := entity.Role{
 		ID:        1,
 		CreatedAt: null.TimeFrom(now),
 		CreatedBy: null.StringFrom("test"),
@@ -237,7 +231,7 @@ func Test_user_Get(t *testing.T) {
 		name        string
 		args        args
 		prepSqlMock func() (*sql.DB, error)
-		want        entity.User
+		want        entity.Role
 		wantErr     bool
 	}{
 		{
@@ -253,7 +247,7 @@ func Test_user_Get(t *testing.T) {
 				return sqlServer, err
 			},
 			wantErr: true,
-			want:    entity.User{},
+			want:    entity.Role{},
 		},
 		{
 			name: "error struct scan",
@@ -271,7 +265,7 @@ func Test_user_Get(t *testing.T) {
 				return sqlServer, err
 			},
 			wantErr: true,
-			want:    entity.User{},
+			want:    entity.Role{},
 		},
 		{
 			name: "all good",
@@ -288,7 +282,7 @@ func Test_user_Get(t *testing.T) {
 				return sqlServer, err
 			},
 			wantErr: false,
-			want:    sampleUser,
+			want:    sampleResult,
 		},
 	}
 
@@ -330,7 +324,7 @@ func Test_user_Get(t *testing.T) {
 	}
 }
 
-func Test_user_GetList(t *testing.T) {
+func Test_role_GetList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -344,17 +338,17 @@ func Test_user_GetList(t *testing.T) {
 	// Type in here
 	type args struct {
 		ctx    context.Context
-		params entity.UserParam
+		params entity.RoleParam
 	}
 
 	// Mock in here
 	now := time.Now()
 	queryExt := " WHERE 1=1 AND id=? LIMIT 0, 10;"
-	query := regexp.QuoteMeta(readUser + queryExt)
+	query := regexp.QuoteMeta(readRole + queryExt)
 	queryCountExt := " WHERE 1=1 AND id=?;"
-	queryCount := regexp.QuoteMeta(readUserCount + queryCountExt)
+	queryCount := regexp.QuoteMeta(readRoleCount + queryCountExt)
 
-	mockUserParam := entity.UserParam{
+	mockParams := entity.RoleParam{
 		ID: null.Int64From(1),
 		PaginationParam: entity.PaginationParam{
 			IncludePagination: true,
@@ -374,7 +368,7 @@ func Test_user_GetList(t *testing.T) {
 		name        string
 		args        args
 		prepSqlMock func() (*sql.DB, error)
-		want        []entity.User
+		want        []entity.Role
 		want1       *entity.Pagination
 		wantErr     bool
 	}{
@@ -382,14 +376,14 @@ func Test_user_GetList(t *testing.T) {
 			name: "error when query-ing",
 			args: args{
 				ctx:    context.Background(),
-				params: mockUserParam,
+				params: mockParams,
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
-				sqlMock.ExpectQuery(query).WillReturnError(fmt.Errorf("failed to get list of user"))
+				sqlMock.ExpectQuery(query).WillReturnError(fmt.Errorf("failed to get list of role"))
 				return sqlServer, err
 			},
-			want:    []entity.User{},
+			want:    []entity.Role{},
 			want1:   nil,
 			wantErr: true,
 		},
@@ -397,7 +391,7 @@ func Test_user_GetList(t *testing.T) {
 			name: "error when struct scan",
 			args: args{
 				ctx:    context.Background(),
-				params: mockUserParam,
+				params: mockParams,
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
@@ -410,7 +404,7 @@ func Test_user_GetList(t *testing.T) {
 				sqlMock.ExpectQuery(queryCount).WillReturnRows(rowCount)
 				return sqlServer, err
 			},
-			want:    []entity.User{},
+			want:    []entity.Role{},
 			want1:   nil,
 			wantErr: true,
 		},
@@ -418,7 +412,7 @@ func Test_user_GetList(t *testing.T) {
 			name: "all good",
 			args: args{
 				ctx:    context.Background(),
-				params: mockUserParam,
+				params: mockParams,
 			},
 			prepSqlMock: func() (*sql.DB, error) {
 				sqlServer, sqlMock, err := sqlmock.New()
@@ -431,7 +425,7 @@ func Test_user_GetList(t *testing.T) {
 				sqlMock.ExpectQuery(queryCount).WillReturnRows(rowCount)
 				return sqlServer, err
 			},
-			want: []entity.User{
+			want: []entity.Role{
 				{
 					ID:        1,
 					CreatedAt: null.TimeFrom(now),
@@ -487,7 +481,7 @@ func Test_user_GetList(t *testing.T) {
 	}
 }
 
-func Test_user_Update(t *testing.T) {
+func Test_role_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -501,24 +495,23 @@ func Test_user_Update(t *testing.T) {
 	// Type in here
 	type args struct {
 		ctx         context.Context
-		updateParam entity.UpdateUserParam
-		selectParam entity.UserParam
+		updateParam entity.UpdateRoleParam
+		selectParam entity.RoleParam
 	}
 
 	// Mock in here
-	queryUpdate := regexp.QuoteMeta("UPDATE user SET username=?, display_name=?, updated_by=? WHERE 1=1 AND status=1 AND id=?")
+	queryUpdate := regexp.QuoteMeta("UPDATE role SET name=?, updated_by=? WHERE 1=1 AND status=1 AND id=?")
 
-	selectParamSample := entity.UserParam{
+	selectParamSample := entity.RoleParam{
 		ID: null.Int64From(1),
 		QueryOption: query.Option{
 			IsActive: true,
 		},
 	}
 
-	updateParamSample := entity.UpdateUserParam{
-		Username:    "username",
-		DisplayName: "display name",
-		UpdatedBy:   null.StringFrom("1"),
+	updateParamSample := entity.UpdateRoleParam{
+		Name:      "Edit Nama",
+		UpdatedBy: null.StringFrom("1"),
 	}
 
 	// Test cases in here
@@ -543,7 +536,7 @@ func Test_user_Update(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "no user updated",
+			name: "no role updated",
 			args: args{
 				ctx:         context.Background(),
 				updateParam: updateParamSample,
@@ -557,7 +550,7 @@ func Test_user_Update(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "update user 0 rows affected",
+			name: "update role 0 rows affected",
 			args: args{
 				ctx:         context.Background(),
 				updateParam: updateParamSample,
@@ -571,7 +564,7 @@ func Test_user_Update(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "update user success",
+			name: "update role success",
 			args: args{
 				ctx:         context.Background(),
 				updateParam: updateParamSample,

@@ -5,7 +5,7 @@ const (
 	INSERT INTO url (original_url, shorten_url, fk_user_id, created_by, updated_by)
 	    VALUES (:original_url, :shorten_url, :fk_user_id, :created_by, :updated_by)`
 
-	getUrl = `
+	readUrl = `
 	SELECT
 	    id,
 		original_url,

@@ -77,7 +77,7 @@ func (r *rest) GetListUrlAdmin(ctx *gin.Context) {
 		return
 	}
 
-	urls, pg, err := r.uc.Url.GetListAdmin(ctx.Request.Context(), param)
+	urls, pg, err := r.uc.Url.GetListAsAdmin(ctx.Request.Context(), param)
 	if err != nil {
 		r.httpRespError(ctx, err)
 		return
