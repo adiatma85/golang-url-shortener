@@ -48,8 +48,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/adiatma85/dark-gin-swagger v1.1.0 h1:RJg1i/WzzxI89ZyfpFlbvMo4Pb/v7MPIQEsV6kP4AWI=
 github.com/adiatma85/dark-gin-swagger v1.1.0/go.mod h1:de1iUFnKrpjbRunIVOIJUGOg2ISopWzHhLmYysbvAJM=
-github.com/adiatma85/own-go-sdk v0.1.16 h1:FaDzQDVU65+QezrnrFkoq3dob8e6NHRowHQwPBnmEsk=
-github.com/adiatma85/own-go-sdk v0.1.16/go.mod h1:7LK1WTNmruP75/7zM7l/zt1CpjR26S7zbHGxzq48OYg=
+github.com/adiatma85/own-go-sdk v0.1.17 h1:QHIPYpZwepCT0ss0DhS6Pt5JHQKdpDfaCsYZ9BpG9+Y=
+github.com/adiatma85/own-go-sdk v0.1.17/go.mod h1:7LK1WTNmruP75/7zM7l/zt1CpjR26S7zbHGxzq48OYg=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

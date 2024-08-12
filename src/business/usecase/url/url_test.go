@@ -172,10 +172,17 @@ func Test_url_Get(t *testing.T) {
 	}
 
 	// Mock in here
-	mockCategoryParam := entity.UrlParam{
+	mockUrlParam := entity.UrlParam{
 		ID: null.Int64From(1),
 		QueryOption: query.Option{
 			IsActive: true,
+		},
+		UserId: null.Int64From(10),
+	}
+
+	mockUserInfo := jwtAuth.UserAuthInfo{
+		User: jwtAuth.User{
+			ID: 10,
 		},
 	}
 
@@ -194,13 +201,26 @@ func Test_url_Get(t *testing.T) {
 		wantErr  bool
 	}{
 		{
+			name: "failed to get user info",
+			arg: args{
+				ctx:    context.Background(),
+				params: mockUrlParam,
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.jwtAuth.EXPECT().GetUserAuthInfo(arg.ctx).Return(jwtAuth.UserAuthInfo{}, assert.AnError)
+			},
+			want:    entity.Url{},
+			wantErr: true,
+		},
+		{
 			name: "failed to get from category domain",
 			arg: args{
 				ctx:    context.Background(),
-				params: mockCategoryParam,
+				params: mockUrlParam,
 			},
 			mockFunc: func(mock mockInterface, arg args) {
-				mock.urlDom.EXPECT().Get(arg.ctx, mockCategoryParam).Return(entity.Url{}, assert.AnError)
+				mock.jwtAuth.EXPECT().GetUserAuthInfo(arg.ctx).Return(mockUserInfo, nil)
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(entity.Url{}, assert.AnError)
 			},
 			want:    entity.Url{},
 			wantErr: true,
@@ -209,10 +229,11 @@ func Test_url_Get(t *testing.T) {
 			name: "success",
 			arg: args{
 				ctx:    context.Background(),
-				params: mockCategoryParam,
+				params: mockUrlParam,
 			},
 			mockFunc: func(mock mockInterface, arg args) {
-				mock.urlDom.EXPECT().Get(arg.ctx, mockCategoryParam).Return(mockFinalResult, nil)
+				mock.jwtAuth.EXPECT().GetUserAuthInfo(arg.ctx).Return(mockUserInfo, nil)
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(mockFinalResult, nil)
 			},
 			want:    mockFinalResult,
 			wantErr: false,
@@ -257,6 +278,13 @@ func Test_url_GetList(t *testing.T) {
 		QueryOption: query.Option{
 			IsActive: true,
 		},
+		UserId: null.Int64From(10),
+	}
+
+	mockUserInfo := jwtAuth.UserAuthInfo{
+		User: jwtAuth.User{
+			ID: 10,
+		},
 	}
 
 	mockPagination := entity.Pagination{
@@ -283,13 +311,13 @@ func Test_url_GetList(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name: "error fetching from domain",
+			name: "failed to fetch from user info",
 			arg: args{
 				ctx:    context.Background(),
 				params: mockParams,
 			},
 			mockFunc: func(mock mockInterface, arg args) {
-				mock.urlDom.EXPECT().GetList(arg.ctx, mockParams).Return([]entity.Url{}, nil, assert.AnError)
+				mock.jwtAuth.EXPECT().GetUserAuthInfo(arg.ctx).Return(jwtAuth.UserAuthInfo{}, assert.AnError)
 			},
 			want:       []entity.Url{},
 			pagination: nil,
@@ -302,6 +330,21 @@ func Test_url_GetList(t *testing.T) {
 				params: mockParams,
 			},
 			mockFunc: func(mock mockInterface, arg args) {
+				mock.jwtAuth.EXPECT().GetUserAuthInfo(arg.ctx).Return(mockUserInfo, nil)
+				mock.urlDom.EXPECT().GetList(arg.ctx, mockParams).Return([]entity.Url{}, nil, assert.AnError)
+			},
+			want:       []entity.Url{},
+			pagination: nil,
+			wantErr:    true,
+		},
+		{
+			name: "all success",
+			arg: args{
+				ctx:    context.Background(),
+				params: mockParams,
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.jwtAuth.EXPECT().GetUserAuthInfo(arg.ctx).Return(mockUserInfo, nil)
 				mock.urlDom.EXPECT().GetList(arg.ctx, mockParams).Return(mockResult, &mockPagination, nil)
 			},
 			want:       mockResult,
@@ -454,11 +497,13 @@ func Test_category_Update(t *testing.T) {
 		QueryOption: query.Option{
 			IsActive: true,
 		},
+		UserId: null.Int64From(10),
 	}
 
 	mockUserInfo := jwtAuth.UserAuthInfo{
 		User: jwtAuth.User{
-			ID: 10,
+			ID:     10,
+			RoleID: entity.RoleIdUser,
 		},
 	}
 
@@ -549,11 +594,13 @@ func Test_category_Delete(t *testing.T) {
 		QueryOption: query.Option{
 			IsActive: true,
 		},
+		UserId: null.Int64From(10),
 	}
 
 	mockUserInfo := jwtAuth.UserAuthInfo{
 		User: jwtAuth.User{
-			ID: 10,
+			ID:     10,
+			RoleID: entity.RoleIdUser,
 		},
 	}
 
