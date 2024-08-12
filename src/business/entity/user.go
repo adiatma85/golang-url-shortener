@@ -25,6 +25,7 @@ type User struct {
 func (u *User) ConvertToAuthUser() jwtAuth.User {
 	return jwtAuth.User{
 		ID:       u.ID,
+		RoleID:   u.RoleId.Int64,
 		Email:    u.Email,
 		Username: u.Username,
 	}

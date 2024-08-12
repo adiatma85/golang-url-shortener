@@ -118,18 +118,34 @@ func (u *url) generateShortenUrl() (string, error) {
 }
 
 func (u *url) Get(ctx context.Context, params entity.UrlParam) (entity.Url, error) {
+	user, err := u.jwtAuth.GetUserAuthInfo(ctx)
+	if err != nil {
+		return entity.Url{}, err
+	}
+
 	params.QueryOption = query.Option{
 		IsActive: true,
 	}
+
+	// Assign the params with user id
+	params.UserId = null.Int64From(user.User.ID)
 
 	return u.url.Get(ctx, params)
 }
 
 func (u *url) GetList(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error) {
+	user, err := u.jwtAuth.GetUserAuthInfo(ctx)
+	if err != nil {
+		return []entity.Url{}, nil, err
+	}
+
 	params.IncludePagination = true
 	params.QueryOption = query.Option{
 		IsActive: true,
 	}
+
+	// Assign the params with user id
+	params.UserId = null.Int64From(user.User.ID)
 
 	return u.url.GetList(ctx, params)
 }
@@ -146,6 +162,11 @@ func (u *url) Update(ctx context.Context, updateParam entity.UpdateUrlParam, sel
 		return err
 	}
 
+	// Assign the user id if they are not admin
+	if user.User.RoleID != entity.RoleIdSuperAdmin {
+		selectParam.UserId = null.Int64From(user.User.ID)
+	}
+
 	updateParam.UpdatedAt = null.TimeFrom(Now())
 	updateParam.UpdatedBy = null.StringFrom(fmt.Sprintf("%v", user.User.ID))
 
@@ -156,6 +177,11 @@ func (u *url) Delete(ctx context.Context, selectParam entity.UrlParam) error {
 	user, err := u.jwtAuth.GetUserAuthInfo(ctx)
 	if err != nil {
 		return err
+	}
+
+	// Assign the user id if they are not admin
+	if user.User.RoleID != entity.RoleIdSuperAdmin {
+		selectParam.UserId = null.Int64From(user.User.ID)
 	}
 
 	deleteParam := entity.UpdateUrlParam{
