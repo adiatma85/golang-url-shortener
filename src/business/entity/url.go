@@ -7,6 +7,9 @@ import (
 
 const (
 	Base62Chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	// Redis Key For counting
+	UrlCountingRedisKey = "url_shortener:key_count:%s"
 )
 
 type Url struct {

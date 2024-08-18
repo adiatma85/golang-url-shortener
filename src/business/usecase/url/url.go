@@ -11,6 +11,7 @@ import (
 	"github.com/adiatma85/own-go-sdk/log"
 	"github.com/adiatma85/own-go-sdk/null"
 	"github.com/adiatma85/own-go-sdk/query"
+	"github.com/adiatma85/own-go-sdk/redis"
 
 	urlDom "github.com/adiatma85/golang-url-shortener/src/business/domain/url"
 	"github.com/adiatma85/golang-url-shortener/src/business/entity"
@@ -24,18 +25,23 @@ type Interface interface {
 	GetListAsAdmin(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error)
 	Update(ctx context.Context, updateParam entity.UpdateUrlParam, selectParam entity.UrlParam) error
 	Delete(ctx context.Context, selectParam entity.UrlParam) error
+
+	// Scheduler functions below
+	AssignCounterScheduler(ctx context.Context) error
 }
 
 type InitParam struct {
 	Log     log.Interface
 	Url     urlDom.Interface
 	JwtAuth jwtAuth.Interface
+	Redis   redis.Interface
 }
 
 type url struct {
 	log     log.Interface
 	url     urlDom.Interface
 	jwtAuth jwtAuth.Interface
+	redis   redis.Interface
 }
 
 var Now = time.Now
@@ -45,6 +51,7 @@ func Init(params InitParam) Interface {
 		log:     params.Log,
 		url:     params.Url,
 		jwtAuth: params.JwtAuth,
+		redis:   params.Redis,
 	}
 
 	return u

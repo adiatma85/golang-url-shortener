@@ -2,6 +2,8 @@ module github.com/adiatma85/golang-url-shortener
 
 go 1.21
 
+replace github.com/adiatma85/own-go-sdk => ../own-sdk
+
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/adiatma85/dark-gin-swagger v1.1.0
@@ -9,6 +11,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-co-op/gocron v1.37.0
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/files v1.0.1
@@ -20,6 +23,8 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
 )
 
 require (

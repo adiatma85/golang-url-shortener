@@ -21,6 +21,7 @@ type Application struct {
 	Concurrency ConcurrencyConfig
 	Redis       redis.Config
 	JwtAuth     jwtAuth.Config
+	Scheduler   SchedulerConfig
 }
 
 type ApplicationMeta struct {
@@ -103,6 +104,11 @@ type SchedulerTaskConf struct {
 	TimeType      string
 	Interval      time.Duration
 	ScheduledTime string
+}
+
+type SchedulerConfig struct {
+	DisableScheduler      bool
+	AssignCounterEndpoint SchedulerTaskConf
 }
 
 func Init() Application {
