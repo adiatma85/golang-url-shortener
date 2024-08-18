@@ -212,6 +212,7 @@ func Test_user_CreateWithoutAuthInfo(t *testing.T) {
 
 	// Mocks in here
 	mockInsertParam := entity.CreateUserParam{
+		RoleId:          entity.RoleIdUser,
 		Email:           "random@email.com",
 		Password:        "samePassword",
 		ConfirmPassword: "samePassword",

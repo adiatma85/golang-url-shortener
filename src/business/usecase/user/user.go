@@ -117,6 +117,9 @@ func (u *user) CreateWithoutAuthInfo(ctx context.Context, req entity.CreateUserP
 		return result, err
 	}
 
+	// Assign the default user id to req
+	req.RoleId = entity.RoleIdUser
+
 	result, err = u.user.Create(ctx, req)
 	if err != nil {
 		return result, err

@@ -7,6 +7,7 @@ import (
 
 const (
 	RoleIdSuperAdmin = 1
+	RoleIdUser       = 2
 
 	// Role Type Enum
 	RoleTypeAdmin = "admin"
