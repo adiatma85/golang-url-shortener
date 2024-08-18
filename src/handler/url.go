@@ -113,13 +113,12 @@ func (r *rest) GetUrlByID(ctx *gin.Context) {
 
 // @Summary Get Url By Shortened Url
 // @Description Get url details by shortened version
-// @Security BearerAuth
 // @Tags Url
 // @Param shorten_url path string true "shorten url"
 // @Produce json
 // @Success 200 {object} entity.HTTPResp{data=entity.Url{}}
 // @Failure 500 {object} entity.HTTPResp{}
-// @Router /v1/shortened-url/{shorten_url} [GET]
+// @Router /public/v1/shortened-url/{shorten_url} [GET]
 func (r *rest) GetByShortenedUrl(ctx *gin.Context) {
 	var param entity.UrlParam
 	if err := r.BindParams(ctx, &param); err != nil {
@@ -127,7 +126,7 @@ func (r *rest) GetByShortenedUrl(ctx *gin.Context) {
 		return
 	}
 
-	url, err := r.uc.Url.Get(ctx, param)
+	url, err := r.uc.Url.GetByShortenUrl(ctx, param)
 	if err != nil {
 		r.httpRespError(ctx, err)
 		return

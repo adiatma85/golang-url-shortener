@@ -3,6 +3,7 @@ package entity
 const (
 	SystemUser         = 0
 	SchedulerUser      = -1
+	SchedulerUserName  = "scheduler"
 	TooManyConnections = "Error 1040: Too many connections"
 )
 

@@ -11,6 +11,7 @@ import (
 	"github.com/adiatma85/own-go-sdk/log"
 	"github.com/adiatma85/own-go-sdk/null"
 	"github.com/adiatma85/own-go-sdk/query"
+	"github.com/adiatma85/own-go-sdk/redis"
 
 	urlDom "github.com/adiatma85/golang-url-shortener/src/business/domain/url"
 	"github.com/adiatma85/golang-url-shortener/src/business/entity"
@@ -20,22 +21,28 @@ import (
 type Interface interface {
 	Create(ctx context.Context, insertParam entity.CreateUrlParam) (entity.Url, error)
 	Get(ctx context.Context, urlParam entity.UrlParam) (entity.Url, error)
+	GetByShortenUrl(ctx context.Context, params entity.UrlParam) (entity.Url, error)
 	GetList(ctx context.Context, urlParam entity.UrlParam) ([]entity.Url, *entity.Pagination, error)
 	GetListAsAdmin(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error)
 	Update(ctx context.Context, updateParam entity.UpdateUrlParam, selectParam entity.UrlParam) error
 	Delete(ctx context.Context, selectParam entity.UrlParam) error
+
+	// Scheduler functions below
+	AssignCounterScheduler(ctx context.Context) error
 }
 
 type InitParam struct {
 	Log     log.Interface
 	Url     urlDom.Interface
 	JwtAuth jwtAuth.Interface
+	Redis   redis.Interface
 }
 
 type url struct {
 	log     log.Interface
 	url     urlDom.Interface
 	jwtAuth jwtAuth.Interface
+	redis   redis.Interface
 }
 
 var Now = time.Now
@@ -45,6 +52,7 @@ func Init(params InitParam) Interface {
 		log:     params.Log,
 		url:     params.Url,
 		jwtAuth: params.JwtAuth,
+		redis:   params.Redis,
 	}
 
 	return u
@@ -129,6 +137,20 @@ func (u *url) Get(ctx context.Context, params entity.UrlParam) (entity.Url, erro
 
 	// Assign the params with user id
 	params.UserId = null.Int64From(user.User.ID)
+
+	return u.url.Get(ctx, params)
+}
+
+func (u *url) GetByShortenUrl(ctx context.Context, params entity.UrlParam) (entity.Url, error) {
+	params.QueryOption = query.Option{
+		IsActive: true,
+	}
+
+	// Now increase the count on the Redis
+	assignKey := fmt.Sprintf(entity.UrlCountingRedisKey, params.ShortenUrl)
+	if err := u.redis.Increment(ctx, assignKey); err != nil {
+		u.log.Error(ctx, err)
+	}
 
 	return u.url.Get(ctx, params)
 }
