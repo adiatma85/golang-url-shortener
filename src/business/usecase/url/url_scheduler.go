@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/adiatma85/golang-url-shortener/src/business/entity"
 	"github.com/adiatma85/own-go-sdk/codes"
@@ -11,9 +12,7 @@ import (
 	"github.com/adiatma85/own-go-sdk/query"
 )
 
-// Implement this
 func (u *url) AssignCounterScheduler(ctx context.Context) error {
-	// Pertama adalah baca semua keys yang ada di Redis
 	scanKey := fmt.Sprintf(entity.UrlCountingRedisKey, "*")
 	allKeys, err := u.redis.Scan(ctx, scanKey)
 	if err != nil {
@@ -22,7 +21,6 @@ func (u *url) AssignCounterScheduler(ctx context.Context) error {
 
 	for _, singleKey := range allKeys {
 		count, err := u.redis.Get(ctx, singleKey)
-
 		if err != nil {
 			u.log.Error(ctx, errors.NewWithCode(codes.CodeRedisGet, fmt.Sprintf("error when processing redis with key %s", singleKey)))
 			continue
@@ -34,8 +32,9 @@ func (u *url) AssignCounterScheduler(ctx context.Context) error {
 			continue
 		}
 
+		extractedKey := strings.Split(singleKey, ":")[2]
 		urlParam := entity.UrlParam{
-			ShortenUrl: singleKey,
+			ShortenUrl: extractedKey,
 			QueryOption: query.Option{
 				IsActive: true,
 			},

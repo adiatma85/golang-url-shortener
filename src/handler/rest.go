@@ -205,6 +205,7 @@ func (r *rest) Register() {
 	// public api
 	publicv1 := r.http.Group("/public/v1/", commonPublicMiddlewares...)
 	publicv1.POST("/register", r.RegisterNewUserWithoutToken)
+	publicv1.GET("/shortened-url/:shorten_url", r.GetByShortenedUrl)
 
 	// auth api
 	authv1 := r.http.Group("/auth/v1", commonPublicMiddlewares...)
@@ -235,7 +236,6 @@ func (r *rest) Register() {
 	v1.GET("/url/:url_id", r.GetUrlByID)
 	v1.PUT("/url/:url_id", r.UpdateUrl)
 	v1.DELETE("/url/:url_id", r.DeleteUrl)
-	v1.GET("/shortened-url/:shorten_url", r.GetByShortenedUrl)
 
 	// role
 	// v1.GET("/role", r.isAdmin, r.GetListRole)
