@@ -2,6 +2,7 @@ package url
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/adiatma85/own-go-sdk/query"
 	mock_jwt_auth "github.com/adiatma85/own-go-sdk/tests/mock/jwtAuth"
 	mock_log "github.com/adiatma85/own-go-sdk/tests/mock/log"
+	mock_redis "github.com/adiatma85/own-go-sdk/tests/mock/redis"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -23,6 +25,7 @@ type mockInterface struct {
 	logger  *mock_log.MockInterface
 	urlDom  *mock_url_dom.MockInterface
 	jwtAuth *mock_jwt_auth.MockInterface
+	redis   *mock_redis.MockInterface
 }
 
 func initMockTest(t *testing.T) (Interface, url, mockInterface) {
@@ -36,23 +39,27 @@ func initMockTest(t *testing.T) (Interface, url, mockInterface) {
 
 	mockUrlDom := mock_url_dom.NewMockInterface(ctrl)
 	mockJwtAuth := mock_jwt_auth.NewMockInterface(ctrl)
+	mockRedis := mock_redis.NewMockInterface(ctrl)
 
 	ucInterface := Init(InitParam{
 		Log:     logger,
 		Url:     mockUrlDom,
 		JwtAuth: mockJwtAuth,
+		Redis:   mockRedis,
 	})
 
 	ucStruct := url{
 		log:     logger,
 		url:     mockUrlDom,
 		jwtAuth: mockJwtAuth,
+		redis:   mockRedis,
 	}
 
 	mockInterface := mockInterface{
 		logger:  logger,
 		urlDom:  mockUrlDom,
 		jwtAuth: mockJwtAuth,
+		redis:   mockRedis,
 	}
 
 	return ucInterface, ucStruct, mockInterface
@@ -254,6 +261,99 @@ func Test_url_Get(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				assert.Equal(t, tt.want, got)
 				t.Errorf("usecase.Get() got = %v, want %v", got, tt.want)
+				return
+			}
+		})
+	}
+}
+
+func Test_url_GetByShortenUrl(t *testing.T) {
+	usecase, _, mocks := initMockTest(t)
+
+	// Type in here
+	type args struct {
+		ctx    context.Context
+		params entity.UrlParam
+	}
+
+	// Mocks in here
+	mockUrlParam := entity.UrlParam{
+		ShortenUrl: "shortened-url",
+		QueryOption: query.Option{
+			IsActive: true,
+		},
+	}
+
+	assignKey := fmt.Sprintf(entity.UrlCountingRedisKey, mockUrlParam.ShortenUrl)
+
+	mockFinalResult := entity.Url{
+		OriginalUrl: "Long Original Url",
+		ShortenUrl:  "shortened-url",
+		Status:      null.Int64From(1),
+	}
+
+	// Test cases in here
+	tests := []struct {
+		name     string
+		arg      args
+		mockFunc func(mock mockInterface, arg args)
+		want     entity.Url
+		wantErr  bool
+	}{
+		{
+			name: "failed to fetch from domain level",
+			arg: args{
+				ctx:    context.Background(),
+				params: mockUrlParam,
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(entity.Url{}, assert.AnError)
+			},
+			want:    entity.Url{},
+			wantErr: true,
+		},
+		{
+			name: "failed to insert to increment to the redis",
+			arg: args{
+				ctx:    context.Background(),
+				params: mockUrlParam,
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(mockFinalResult, nil)
+				mock.redis.EXPECT().Increment(arg.ctx, assignKey).Return(assert.AnError)
+			},
+			want:    mockFinalResult,
+			wantErr: false,
+		},
+		{
+			name: "success",
+			arg: args{
+				ctx:    context.Background(),
+				params: mockUrlParam,
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(mockFinalResult, nil)
+				mock.redis.EXPECT().Increment(arg.ctx, assignKey).Return(nil)
+			},
+			want:    mockFinalResult,
+			wantErr: false,
+		},
+	}
+
+	// Iterate the test cases in here
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc(mocks, tt.arg)
+
+			got, err := usecase.GetByShortenUrl(tt.arg.ctx, tt.arg.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("usecase.GetByShortenUrl() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				assert.Equal(t, tt.want, got)
+				t.Errorf("usecase.GetByShortenUrl() got = %v, want %v", got, tt.want)
 				return
 			}
 		})
@@ -662,6 +762,172 @@ func Test_category_Delete(t *testing.T) {
 			err := usecase.Delete(tt.arg.ctx, tt.arg.selectParam)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("usecase.Delete() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func Test_url_AssignCounterScheduler(t *testing.T) {
+	usecase, _, mocks := initMockTest(t)
+
+	// Type in here
+	type args struct {
+		ctx context.Context
+	}
+
+	// Mock in here
+	scanKey := fmt.Sprintf(entity.UrlCountingRedisKey, "*")
+
+	mockScanResult := []string{
+		fmt.Sprintf(entity.UrlCountingRedisKey, "url-shortened"),
+	}
+
+	mockUrlParam := entity.UrlParam{
+		ShortenUrl: "url-shortened",
+		QueryOption: query.Option{
+			IsActive: true,
+		},
+	}
+
+	mockUrlDomResult := entity.Url{
+		Visit: 0,
+	}
+
+	mockUrlUpdateParam := entity.UpdateUrlParam{
+		Visit: 1,
+	}
+
+	// Test cases in here
+	tests := []struct {
+		name     string
+		arg      args
+		mockFunc func(mock mockInterface, arg args)
+		wantErr  bool
+	}{
+		{
+			name: "failed even when scanning",
+			arg: args{
+				ctx: context.Background(),
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.redis.EXPECT().Scan(arg.ctx, scanKey).Return([]string{}, assert.AnError)
+			},
+			wantErr: true,
+		},
+		{
+			name: "zero slice of string returned when scanning",
+			arg: args{
+				ctx: context.Background(),
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.redis.EXPECT().Scan(arg.ctx, scanKey).Return([]string{}, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name: "failed when fetching value from redis",
+			arg: args{
+				ctx: context.Background(),
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.redis.EXPECT().Scan(arg.ctx, scanKey).Return(mockScanResult, nil)
+
+				// First key
+				mock.redis.EXPECT().Get(arg.ctx, mockScanResult[0]).Return("1", assert.AnError)
+
+			},
+			wantErr: false,
+		},
+		{
+			name: "failed to str atoi for value is not number",
+			arg: args{
+				ctx: context.Background(),
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.redis.EXPECT().Scan(arg.ctx, scanKey).Return(mockScanResult, nil)
+
+				// First key
+				mock.redis.EXPECT().Get(arg.ctx, mockScanResult[0]).Return("NaN", nil)
+
+			},
+			wantErr: false,
+		},
+		{
+			name: "failed to get from url domain",
+			arg: args{
+				ctx: context.Background(),
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.redis.EXPECT().Scan(arg.ctx, scanKey).Return(mockScanResult, nil)
+
+				// First key
+				mock.redis.EXPECT().Get(arg.ctx, mockScanResult[0]).Return("1", nil)
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(mockUrlDomResult, assert.AnError)
+
+			},
+			wantErr: false,
+		},
+		{
+			name: "failed to update to url domain",
+			arg: args{
+				ctx: context.Background(),
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.redis.EXPECT().Scan(arg.ctx, scanKey).Return(mockScanResult, nil)
+
+				// First key
+				mock.redis.EXPECT().Get(arg.ctx, mockScanResult[0]).Return("1", nil)
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(mockUrlDomResult, nil)
+				mock.urlDom.EXPECT().Update(arg.ctx, mockUrlUpdateParam, mockUrlParam).Return(assert.AnError)
+
+			},
+			wantErr: true,
+		},
+		{
+			name: "failed to decrement redis",
+			arg: args{
+				ctx: context.Background(),
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.redis.EXPECT().Scan(arg.ctx, scanKey).Return(mockScanResult, nil)
+
+				// First key
+				mock.redis.EXPECT().Get(arg.ctx, mockScanResult[0]).Return("1", nil)
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(mockUrlDomResult, nil)
+				mock.urlDom.EXPECT().Update(arg.ctx, mockUrlUpdateParam, mockUrlParam).Return(nil)
+				mock.redis.EXPECT().DecrementBy(arg.ctx, mockScanResult[0], int64(1)).Return(assert.AnError)
+
+			},
+			wantErr: false,
+		},
+		{
+			name: "success",
+			arg: args{
+				ctx: context.Background(),
+			},
+			mockFunc: func(mock mockInterface, arg args) {
+				mock.redis.EXPECT().Scan(arg.ctx, scanKey).Return(mockScanResult, nil)
+
+				// First key
+				mock.redis.EXPECT().Get(arg.ctx, mockScanResult[0]).Return("1", nil)
+				mock.urlDom.EXPECT().Get(arg.ctx, mockUrlParam).Return(mockUrlDomResult, nil)
+				mock.urlDom.EXPECT().Update(arg.ctx, mockUrlUpdateParam, mockUrlParam).Return(nil)
+				mock.redis.EXPECT().DecrementBy(arg.ctx, mockScanResult[0], int64(1)).Return(nil)
+
+			},
+			wantErr: false,
+		},
+	}
+
+	// Iterate the tests in here
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFunc(mocks, tt.arg)
+
+			err := usecase.AssignCounterScheduler(tt.arg.ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("usecase.AssignCounterScheduler() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 		})
