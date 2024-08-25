@@ -146,13 +146,19 @@ func (u *url) GetByShortenUrl(ctx context.Context, params entity.UrlParam) (enti
 		IsActive: true,
 	}
 
+	// Fetch first
+	url, err := u.url.Get(ctx, params)
+	if err != nil {
+		return url, err
+	}
+
 	// Now increase the count on the Redis
 	assignKey := fmt.Sprintf(entity.UrlCountingRedisKey, params.ShortenUrl)
-	if err := u.redis.Increment(ctx, assignKey); err != nil {
+	if err = u.redis.Increment(ctx, assignKey); err != nil {
 		u.log.Error(ctx, err)
 	}
 
-	return u.url.Get(ctx, params)
+	return url, nil
 }
 
 func (u *url) GetList(ctx context.Context, params entity.UrlParam) ([]entity.Url, *entity.Pagination, error) {
